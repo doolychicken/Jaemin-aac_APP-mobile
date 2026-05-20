@@ -1543,6 +1543,11 @@ function renderDateStepFlowDrag() {
     return String(value);
   }
 
+  function currentSlotSpeechValue(kind, fallbackValue) {
+    const source = dateStepPage === "summary" ? dateStepFinalSelection : datePuzzleBlankSelection;
+    return source[kind] || fallbackValue;
+  }
+
   function matchDelay(kind) {
     if (kind === "month" || kind === "day") return 650;
     if (kind === "year" || kind === "weekday") return 1600;
@@ -1565,6 +1570,7 @@ function renderDateStepFlowDrag() {
     const main = targetEl.querySelector(".date-puzzle-slot-main");
     const suffix = targetEl.querySelector(".date-puzzle-slot-unit");
     if (main) main.textContent = kind === "weekday" ? String(value).replace("요일", "") : String(value);
+    targetEl.dataset.speechValue = String(value);
     if (suffix) {
       suffix.textContent = kind === "year" ? "년" :
         kind === "month" ? "월" :
@@ -1608,10 +1614,13 @@ function renderDateStepFlowDrag() {
     const isFocused = (dateStepPage === "date" || dateStepPage === "summary") && dateCardFocus === kind;
     slot.className = `date-puzzle-slot date-step-drop-slot${isFocused ? " is-active" : ""}${options.wide ? " date-puzzle-slot--wide" : ""}${options.weather ? " date-puzzle-slot--weather" : ""}`;
     slot.dataset.kind = kind;
+    const speechValue = currentSlotSpeechValue(kind, value);
+    if (speechValue) slot.dataset.speechValue = String(speechValue);
     slot.addEventListener("click", () => {
       if ((dateStepPage === "date" && ["month", "day", "weekday"].includes(kind)) || dateStepPage === "summary") {
         dateCardFocus = kind;
-        speak(unit);
+        const nextSpeechValue = currentSlotSpeechValue(kind, slot.dataset.speechValue || value);
+        speak(nextSpeechValue ? spokenStepLabel(kind, nextSpeechValue) : unit);
         render();
       }
     });
@@ -1777,9 +1786,7 @@ function renderDateStepFlowDrag() {
     tray.className = "date-puzzle-tray";
     const cardGrid = document.createElement("div");
     cardGrid.className = "date-puzzle-card-grid date-puzzle-card-grid--year";
-    [answer.year - 1, answer.year, answer.year + 1].forEach((year) => {
-      cardGrid.appendChild(makeDragCard("year", year, String(year)));
-    });
+    cardGrid.appendChild(makeDragCard("year", answer.year, String(answer.year)));
     tray.appendChild(cardGrid);
     gridEl.appendChild(tray);
     addActions(null, "date");
@@ -1855,9 +1862,7 @@ function renderDateStepFlowDrag() {
   const cardGrid = document.createElement("div");
   cardGrid.className = `date-puzzle-card-grid date-puzzle-card-grid--${dateCardFocus}`;
   if (dateCardFocus === "year") {
-    [answer.year - 1, answer.year, answer.year + 1].forEach((year) => {
-      cardGrid.appendChild(makeDragCard("year", year, String(year)));
-    });
+    cardGrid.appendChild(makeDragCard("year", answer.year, String(answer.year)));
   } else if (dateCardFocus === "month") {
     twoNumberChoices(answer.month, 1, 12).forEach((month) => {
       cardGrid.appendChild(makeDragCard("month", month, String(month)));
@@ -1978,7 +1983,7 @@ function renderDatePuzzle() {
     if (dateCardFocus === kind) slot.classList.add("is-active");
     slot.addEventListener("click", () => {
       dateCardFocus = kind;
-      speak(unit);
+      speak(value ? spokenDropLabel(kind, value) : unit);
       render();
     });
     slot.addEventListener("dragover", allowDrop);
@@ -2132,9 +2137,7 @@ function renderDatePuzzle() {
   }
 
   if (dateCardFocus === "year") {
-    twoNumberChoices(Number(answer.year), 2020, 2035).forEach((year) => {
-      cardGrid.appendChild(makeDragCard("year", year, String(year)));
-    });
+    cardGrid.appendChild(makeDragCard("year", Number(answer.year), String(answer.year)));
   } else if (dateCardFocus === "month") {
     twoNumberChoices(Number(answer.month), 1, 12).forEach((month) => {
       cardGrid.appendChild(makeDragCard("month", month, String(month)));

@@ -1273,7 +1273,7 @@ body {
   min-height: 0;
   border: 1px solid #dbe3ef;
   border-radius: 16px;
-  padding: 8px;
+  padding: clamp(6px, 1vh, 10px);
   background: #fff;
   overflow: hidden;
 }
@@ -1288,18 +1288,23 @@ body {
 .date-puzzle-card-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: clamp(8px, 1.3vh, 12px);
   max-height: 100%;
   overflow: hidden;
   align-content: center;
+  justify-content: center;
 }
 
 .date-puzzle-card-grid--year,
 .date-puzzle-card-grid--month,
 .date-puzzle-card-grid--day {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 560px;
+  grid-template-columns: repeat(2, minmax(0, min(19vh, 190px)));
+  max-width: 430px;
   margin-inline: auto;
+}
+
+.date-puzzle-card-grid--year {
+  grid-template-columns: minmax(0, min(21vh, 210px));
 }
 
 .date-puzzle-card-grid--weekday {
@@ -1312,7 +1317,8 @@ body {
 
 .date-drag-card {
   min-width: 0;
-  min-height: clamp(58px, 9vh, 92px);
+  aspect-ratio: 1 / 1;
+  min-height: 0;
   border: 2px solid #dbe3ef;
   border-radius: 10px;
   background: #fff;
@@ -1342,7 +1348,6 @@ body {
 
 .date-drag-card--weather {
   flex-direction: column;
-  min-height: clamp(106px, 16vh, 136px);
   font-size: clamp(0.72rem, 1.25vw, 0.95rem);
   gap: 3px;
 }
@@ -1397,7 +1402,10 @@ body {
   .date-puzzle-card-grid--year,
   .date-puzzle-card-grid--month,
   .date-puzzle-card-grid--day {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, min(20vw, 140px)));
+  }
+  .date-puzzle-card-grid--year {
+    grid-template-columns: minmax(0, min(26vw, 150px));
   }
   .date-puzzle-card-grid--weekday,
   .date-puzzle-card-grid--weather {
