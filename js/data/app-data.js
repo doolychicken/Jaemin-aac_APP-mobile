@@ -298,8 +298,8 @@ const DATA = {
         { label: "밥 먹기",   nav: "meal",         image: "./images/meal.png" },
         { label: "화장실",    nav: "toilet",       image: "./images/toilet.png" },
         { label: "학교",      nav: "outingSchool", image: "./images/outing_school1.png" },
-        { label: "스케줄표",  nav: "scheduleHome", image: "./images/school_classroom.png" },
-        { label: "날짜",      nav: "dateHome",     image: "./images/outing_park1.png" },
+        { label: "스케줄표",  nav: "scheduleHome", image: "./images/app_schedule.svg" },
+        { label: "날짜",      nav: "dateHome",     image: "./images/app_date.svg" },
         { label: "다음",      nav: "main_p2",      image: "./images/outing.png" }
       ],
       layout: "main"
