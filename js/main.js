@@ -110,35 +110,50 @@ function pickPreferredKoVoice() {
 
 // ── 2. speak: 안드로이드 정교한 예외 처리 ────────────────────────────────────
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+  if (!("speechSynthesis" in window)) return Promise.resolve();
   if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
 
-  const doSpeak = () => {
-    const u = new SpeechSynthesisUtterance(text);
-    if (preferredKoVoice) {
-      u.voice = preferredKoVoice;
-      u.lang = preferredKoVoice.lang || "ko-KR";
-    } else {
-      u.lang = "ko-KR";
-    }
-    u.rate = 0.95;
-    u.pitch = 1.0;
-    window.speechSynthesis.resume();
-    window.speechSynthesis.speak(u);
-  };
+  return new Promise((resolve) => {
+    const doSpeak = () => {
+      const u = new SpeechSynthesisUtterance(text);
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(fallbackTimer);
+        resolve();
+      };
+      const fallbackMs = Math.min(4500, Math.max(900, String(text || "").length * 170 + 500));
+      const fallbackTimer = setTimeout(finish, fallbackMs);
 
-  if (isAndroid) {
-    // 안드로이드: 재생 중일 때만 cancel, 아닐 때는 바로 재생
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      setTimeout(doSpeak, 80);
+      u.onend = finish;
+      u.onerror = finish;
+
+      if (preferredKoVoice) {
+        u.voice = preferredKoVoice;
+        u.lang = preferredKoVoice.lang || "ko-KR";
+      } else {
+        u.lang = "ko-KR";
+      }
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(u);
+    };
+
+    if (isAndroid) {
+      // 안드로이드: 재생 중일 때만 cancel, 아닐 때는 바로 재생
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        setTimeout(doSpeak, 80);
+      } else {
+        setTimeout(doSpeak, 50);
+      }
     } else {
-      setTimeout(doSpeak, 50);
+      window.speechSynthesis.cancel();
+      doSpeak();
     }
-  } else {
-    window.speechSynthesis.cancel();
-    doSpeak();
-  }
+  });
 }
 
 function playPuzzleSound(kind = "success") {
@@ -2212,10 +2227,72 @@ function renderButtons(items, layout) {
   gridEl.innerHTML = "";
   const isMain  = layout === "main";
   const isMedia = layout === "media";
-  gridEl.className = isMain ? "grid" : (isMedia ? "grid media" : "grid detail");
   const pageInfo = paginateItems(items || [], layout);
+  const sidePagerKeys = ["main", "main_p2"];
+  const useSidePager = isMain && sidePagerKeys.includes(currentKey());
+  const sideNavItems = useSidePager
+    ? pageInfo.items.filter((item) => item.label === "다음" || item.label === "이전")
+    : [];
+  const visibleItems = sideNavItems.length
+    ? pageInfo.items.filter((item) => item.label !== "다음" && item.label !== "이전")
+    : pageInfo.items;
+  gridEl.className = isMain
+    ? `grid${sideNavItems.length ? " grid--side-pager" : ""}`
+    : (isMedia ? "grid media" : "grid detail");
 
-  pageInfo.items.forEach((item, index) => {
+  function activateItem(item) {
+    const yUrl = resolveYoutube(item);
+
+    if (currentKey() === "dateMonthPicker") {
+      dateSelection.month = Number(item.label.replace("월", ""));
+      speak(item.label); popScreen();
+      if (guardianDateSetup) pushScreen("dateDayPicker", "일 선택");
+      render(); return;
+    }
+    if (currentKey() === "dateDayPicker") {
+      dateSelection.day = Number(item.label.replace("일", ""));
+      speak(item.label); popScreen();
+      if (guardianDateSetup) pushScreen("dateWeekdayPicker", "요일 선택");
+      render(); return;
+    }
+    if (currentKey() === "dateWeekdayPicker") {
+      dateSelection.weekday = item.label;
+      speak(item.label);
+      guardianDateSetup = false;
+      while (currentKey() !== "dateHome" && navStack.length > 1) popScreen();
+      render(); return;
+    }
+    if (currentKey() === "dateWeatherPicker") {
+      dateSelection.weather = item.label;
+      playWeatherSound(item.label);
+      speak(item.label); popScreen(); render(); return;
+    }
+
+    if (currentKey() === "weatherHome") {
+      playWeatherSound(item.label);
+    }
+    const moveAfterSpeech = () => window.setTimeout(() => {
+      if (item.nav) { pushScreen(item.nav, item.label); render(); return; }
+      if (yUrl) {
+        if (item.playInApp && !useDirectYoutubeOpen) {
+          pushScreen("youtubePlayer", item.label); setPlayer(yUrl); render();
+        } else {
+          const screen = DATA.screens[currentKey()] || {};
+          if (screen.showPlayer) { setPlayer(yUrl); render(); }
+          else openYoutubeDirect(yUrl);
+        }
+      }
+    }, 70);
+
+    const speechDone = Promise.resolve(speak(item.label));
+    if (item.label === "다음" || item.label === "이전") {
+      speechDone.finally(moveAfterSpeech);
+    } else {
+      moveAfterSpeech();
+    }
+  }
+
+  visibleItems.forEach((item, index) => {
     const btn  = document.createElement("button");
     const yUrl = resolveYoutube(item);
 
@@ -2252,51 +2329,21 @@ function renderButtons(items, layout) {
       btn.textContent = item.label;
     }
 
-    btn.addEventListener("click", () => {
-      // 날짜 picker 처리
-      if (currentKey() === "dateMonthPicker") {
-        dateSelection.month = Number(item.label.replace("월", ""));
-        speak(item.label); popScreen();
-        if (guardianDateSetup) pushScreen("dateDayPicker", "일 선택");
-        render(); return;
-      }
-      if (currentKey() === "dateDayPicker") {
-        dateSelection.day = Number(item.label.replace("일", ""));
-        speak(item.label); popScreen();
-        if (guardianDateSetup) pushScreen("dateWeekdayPicker", "요일 선택");
-        render(); return;
-      }
-      if (currentKey() === "dateWeekdayPicker") {
-        dateSelection.weekday = item.label;
-        speak(item.label);
-        guardianDateSetup = false;
-        while (currentKey() !== "dateHome" && navStack.length > 1) popScreen();
-        render(); return;
-      }
-      if (currentKey() === "dateWeatherPicker") {
-        dateSelection.weather = item.label;
-        playWeatherSound(item.label);
-        speak(item.label); popScreen(); render(); return;
-      }
+    btn.addEventListener("click", () => activateItem(item));
 
-      if (currentKey() === "weatherHome") {
-        playWeatherSound(item.label);
-      }
-      speak(item.label);
-      window.setTimeout(() => {
-        if (item.nav) { pushScreen(item.nav, item.label); render(); return; }
-        if (yUrl) {
-          if (item.playInApp && !useDirectYoutubeOpen) {
-            pushScreen("youtubePlayer", item.label); setPlayer(yUrl); render();
-          } else {
-            const screen = DATA.screens[currentKey()] || {};
-            if (screen.showPlayer) { setPlayer(yUrl); render(); }
-            else openYoutubeDirect(yUrl);
-          }
-        }
-      }, 70);
-    });
+    if (item.nav) {
+      btn.addEventListener("pointerdown", () => prefetchScreenImages(item.nav), { passive: true });
+    }
+    gridEl.appendChild(btn);
+  });
 
+  sideNavItems.forEach((item) => {
+    const btn = document.createElement("button");
+    btn.className = `tile-nav-arrow tile-nav-arrow--${item.label === "이전" ? "prev" : "next"}`;
+    btn.type = "button";
+    btn.setAttribute("aria-label", item.label);
+    btn.textContent = item.label === "이전" ? "‹" : "›";
+    btn.addEventListener("click", () => activateItem(item));
     if (item.nav) {
       btn.addEventListener("pointerdown", () => prefetchScreenImages(item.nav), { passive: true });
     }

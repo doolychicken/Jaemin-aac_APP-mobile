@@ -3820,23 +3820,24 @@ body {
   }
 }
 
-/* Home schedule: six square choices per page, then one large active task. */
+/* Home schedule: six square choices per page, then three-step runner. */
 .grid.home-activity-picker {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(0, 245px)) !important;
   width: 100%;
-  max-width: min(860px, 100%);
+  max-width: 780px;
   margin-inline: auto;
   align-content: start;
-  justify-items: stretch;
-  gap: clamp(12px, 2vh, 18px);
+  justify-content: center;
+  justify-items: center;
+  gap: clamp(12px, 1.8vh, 18px);
 }
 
 .grid.home-activity-picker > .tile {
   width: 100% !important;
-  max-width: none !important;
+  max-width: 245px !important;
   aspect-ratio: 1 / 1 !important;
   min-height: 0 !important;
-  padding: clamp(10px, 1.6vh, 16px);
+  padding: clamp(8px, 1.2vh, 12px);
 }
 
 .grid.home-activity-picker > .tile img {
@@ -3847,7 +3848,7 @@ body {
 .grid.home-activity-picker > .tile .tile-label {
   flex: 0 0 auto;
   min-height: 2em;
-  font-size: clamp(1rem, 2vh, 1.28rem);
+  font-size: clamp(0.88rem, 1.65vh, 1.05rem);
 }
 
 .grid.home-activity-picker > .tile-nav {
@@ -3859,73 +3860,221 @@ body {
 
 .grid.home-activity-picker > .btn {
   grid-column: 1 / -1;
-  min-height: 56px;
+  min-height: 48px;
+}
+
+.home-activity-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1.6vh, 14px);
+  justify-self: center;
+  width: min(100%, 520px);
+  margin-top: clamp(4px, 1vh, 10px);
+}
+
+.home-activity-actions .btn {
+  min-height: 58px;
+  font-size: clamp(1.05rem, 2.1vh, 1.35rem);
 }
 
 .grid.home-runner-grid {
   grid-template-columns: 1fr !important;
   width: 100%;
   max-width: 100%;
-  min-height: min(72vh, 620px);
+  min-height: min(70vh, 620px);
+  margin-inline: auto;
   align-content: center;
+  justify-content: center;
   justify-items: center;
   gap: clamp(14px, 2vh, 22px);
 }
 
-.grid.home-runner-grid .home-runner-current {
-  grid-column: auto !important;
-  width: min(76vh, 82vw, 560px) !important;
+.grid.home-runner-grid .home-runner-tile {
+  width: min(82vw, 58vh, 560px) !important;
   max-width: 560px !important;
   aspect-ratio: 1 / 1 !important;
   min-height: 0 !important;
+  padding: clamp(14px, 2.2vh, 24px) !important;
+}
+
+.grid.home-runner-grid .home-runner-current {
+  grid-column: auto !important;
+  grid-row: auto !important;
   flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
-  padding: clamp(16px, 2.4vh, 26px) !important;
-  gap: clamp(12px, 2vh, 20px) !important;
   border: 4px solid #14c8c5 !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.56) 100%),
     linear-gradient(135deg, #35d6d2 0%, #4f8cff 100%) !important;
+  box-shadow: 0 0 0 5px rgba(20, 200, 197, 0.18), 0 20px 48px rgba(76, 111, 174, 0.22) !important;
+  overflow: hidden;
 }
 
-.grid.home-runner-grid .home-runner-current img {
+.grid.home-runner-grid .home-runner-next {
+  border: 2px solid rgba(255, 255, 255, 0.92) !important;
+  opacity: 0.9;
+}
+
+.grid.home-runner-grid .home-runner-current img,
+.grid.home-runner-grid .home-runner-next img {
   width: 100% !important;
-  height: clamp(230px, 52vh, 390px) !important;
-  max-height: 68% !important;
+  height: clamp(260px, 48vh, 430px) !important;
+  min-height: 0 !important;
   flex: 1 1 auto !important;
   object-fit: contain !important;
   border-radius: 10px !important;
 }
 
-.grid.home-runner-grid .home-runner-current .tile-art {
+.grid.home-runner-grid .home-runner-current img {
+  max-height: 78% !important;
+  padding: 0 !important;
+  transform: none;
+  margin-inline: auto;
+}
+
+.grid.home-runner-grid .home-runner-next img {
+  max-height: 46% !important;
+}
+
+.grid.home-runner-grid .home-runner-current .tile-art,
+.grid.home-runner-grid .home-runner-next .tile-art {
   width: 100% !important;
-  height: clamp(230px, 52vh, 390px) !important;
-  max-height: 68% !important;
   flex: 1 1 auto !important;
-  font-size: clamp(5rem, 16vh, 9rem) !important;
+}
+
+.grid.home-runner-grid .home-runner-current .tile-art {
+  font-size: clamp(6rem, 18vh, 10rem) !important;
+}
+
+.grid.home-runner-grid .home-runner-next .tile-art {
+  font-size: clamp(2.8rem, 8vh, 5rem) !important;
 }
 
 .grid.home-runner-grid .home-runner-current .tile-label {
   flex: 0 0 auto !important;
   min-height: auto;
+  width: 100%;
   color: #ffffff !important;
-  font-size: clamp(1.65rem, 4vh, 2.4rem) !important;
+  font-size: clamp(1.65rem, 4vh, 2.35rem) !important;
   line-height: 1.08;
   text-align: center !important;
 }
 
+.grid.home-runner-grid .home-runner-next .tile-label {
+  flex: 0 0 auto !important;
+  min-height: 2em;
+  font-size: clamp(0.95rem, 2vh, 1.18rem) !important;
+}
+
 .grid.home-runner-grid > .btn {
-  grid-column: auto !important;
+  grid-column: 1 / -1 !important;
   width: min(82vw, 360px);
+  justify-self: center;
 }
 
 @media (max-width: 720px) {
   .grid.home-activity-picker {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 245px)) !important;
+  }
+
+  .grid.home-runner-grid {
+    grid-template-columns: 1fr !important;
   }
 
   .grid.home-runner-grid .home-runner-current {
-    width: min(84vw, 500px) !important;
+    width: min(88vw, 500px) !important;
+  }
+}
+
+/* Main screen pager: keep six tiles together and put page navigation beside them. */
+.grid.grid--side-pager {
+  grid-template-columns: repeat(3, minmax(0, 245px)) minmax(96px, 116px) !important;
+  justify-content: center;
+  align-content: center;
+  gap: clamp(10px, 1.6vh, 16px);
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+.grid.grid--side-pager > .tile {
+  width: min(100%, 245px) !important;
+  max-width: 245px !important;
+}
+
+.grid.grid--side-pager > .tile:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.grid.grid--side-pager > .tile:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+.grid.grid--side-pager > .tile:nth-of-type(3) { grid-column: 3; grid-row: 1; }
+.grid.grid--side-pager > .tile:nth-of-type(4) { grid-column: 1; grid-row: 2; }
+.grid.grid--side-pager > .tile:nth-of-type(5) { grid-column: 2; grid-row: 2; }
+.grid.grid--side-pager > .tile:nth-of-type(6) { grid-column: 3; grid-row: 2; }
+
+.tile-nav-arrow {
+  grid-column: 4;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  width: clamp(88px, 10vh, 108px);
+  height: clamp(88px, 10vh, 108px);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  color: transparent;
+  background: linear-gradient(135deg, #ff9ed7 0%, #8bc8ff 52%, #48ddd6 100%);
+  box-shadow: 0 18px 38px rgba(76, 111, 174, 0.22), inset 0 -6px 16px rgba(37, 52, 86, 0.10);
+  font-size: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-nav-arrow::before {
+  content: "";
+  width: 0;
+  height: 0;
+  margin-left: 7px;
+  border-top: clamp(15px, 2.2vh, 22px) solid transparent;
+  border-bottom: clamp(15px, 2.2vh, 22px) solid transparent;
+  border-left: clamp(24px, 3.2vh, 34px) solid #ffffff;
+  filter: drop-shadow(0 3px 6px rgba(37, 52, 86, 0.24));
+}
+
+.tile-nav-arrow::after {
+  content: none;
+}
+
+.tile-nav-arrow--prev::before {
+  margin-left: 0;
+  margin-right: 6px;
+  transform: rotate(180deg);
+}
+
+.tile-nav-arrow:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 760px) {
+  .grid.grid--side-pager {
+    grid-template-columns: repeat(2, minmax(0, 210px)) minmax(78px, 94px) !important;
+    max-width: 100%;
+  }
+
+  .grid.grid--side-pager > .tile {
+    width: min(100%, 210px) !important;
+  }
+
+  .grid.grid--side-pager > .tile:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+  .grid.grid--side-pager > .tile:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+  .grid.grid--side-pager > .tile:nth-of-type(3) { grid-column: 1; grid-row: 2; }
+  .grid.grid--side-pager > .tile:nth-of-type(4) { grid-column: 2; grid-row: 2; }
+  .grid.grid--side-pager > .tile:nth-of-type(5) { grid-column: 1; grid-row: 3; }
+  .grid.grid--side-pager > .tile:nth-of-type(6) { grid-column: 2; grid-row: 3; }
+
+  .tile-nav-arrow {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    width: 78px;
+    height: 78px;
   }
 }

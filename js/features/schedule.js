@@ -480,36 +480,24 @@ function renderHomeActivityPicker() {
   }
 
   function appendControls() {
-    if (homeActivityGroupId) {
-      const groupBtn = document.createElement("button");
-      groupBtn.className = "btn";
-      groupBtn.style.cssText = "grid-column:1/-1; background:#eef3ff; color:#31528f; min-height:52px; font-size:1rem;";
-      groupBtn.textContent = "외출 / 집 선택으로";
-      groupBtn.addEventListener("click", () => {
-        homeActivityGroupId = "";
-        homeActivityPage = 0;
-        speak("종류 선택");
-        render();
-      });
-      gridEl.appendChild(groupBtn);
-    }
+    if (!homeActivityGroupId) return;
 
-    if (homeSchedule.length > 0) {
-      const clearBtn = document.createElement("button");
-      clearBtn.className = "btn";
-      clearBtn.style.cssText = "grid-column:1/-1; background:#f1f5f9; color:#64748b; min-height:56px; font-size:1rem;";
-      clearBtn.textContent = "전체 지우기";
-      clearBtn.addEventListener("click", () => {
-        homeSchedule = [];
-        homeScheduleGroupId = homeActivityGroupId;
-        render();
-      });
-      gridEl.appendChild(clearBtn);
-    }
+    const actions = document.createElement("div");
+    actions.className = "home-activity-actions";
+
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn";
+    backBtn.textContent = "뒤로 가기";
+    backBtn.addEventListener("click", () => {
+      homeActivityGroupId = "";
+      homeActivityPage = 0;
+      speak("뒤로 가기");
+      render();
+    });
+    actions.appendChild(backBtn);
 
     const startBtn = document.createElement("button");
     startBtn.className = "btn main";
-    startBtn.style.cssText = "grid-column:1/-1;";
     startBtn.disabled = homeSchedule.length === 0;
     startBtn.textContent = homeSchedule.length === 0
       ? "할 일을 선택하세요"
@@ -521,7 +509,8 @@ function renderHomeActivityPicker() {
       pushScreen("scheduleHomeRun", "집 스케줄 실행");
       render();
     });
-    gridEl.appendChild(startBtn);
+    actions.appendChild(startBtn);
+    gridEl.appendChild(actions);
   }
 
   function appendHomeActivityPager(group) {
@@ -573,7 +562,6 @@ function renderHomeActivityPicker() {
       });
       gridEl.appendChild(btn);
     });
-    appendControls();
     return;
   }
 
@@ -630,7 +618,7 @@ function renderHomeScheduleRunner() {
   }
 
   // helperEl에 남은 개수 표시
-  helperEl.textContent = `남은 할 일: ${homeScheduleRemaining.length}가지 · 눌러서 완료`;
+  helperEl.textContent = `남은 할 일: ${homeScheduleRemaining.length}가지 · 큰 카드를 눌러서 완료`;
 
   const label = homeScheduleRemaining[0];
   const activity = HOME_ACTIVITIES.find((a) => a.label === label);
@@ -669,13 +657,19 @@ function renderHomeScheduleRunner() {
   btn.appendChild(numBadge);
 
   btn.addEventListener("click", () => {
-    const isLast = homeScheduleRemaining.length === 1;
-    speak(isLast ? "모두 다 했어요! 정말 잘했어요!" : label + " 완료!");
-    btn.classList.add("home-runner-done-anim");
-    btn.addEventListener("animationend", () => {
-      homeScheduleRemaining.shift();
-      render();
-    }, { once: true });
+    btn.disabled = true;
+    const afterSpeech = Promise.resolve(speak(label + " 완료!"));
+    afterSpeech.finally(() => {
+      btn.classList.add("home-runner-done-anim");
+      btn.addEventListener("animationend", () => {
+        const finishedAll = homeScheduleRemaining.length === 1;
+        homeScheduleRemaining.shift();
+        render();
+        if (finishedAll) {
+          window.setTimeout(() => speak("모두 다 했어요! 정말 잘했어요!"), 250);
+        }
+      }, { once: true });
+    });
   });
 
   gridEl.appendChild(btn);

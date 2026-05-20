@@ -311,6 +311,7 @@ const DATA = {
       hero: [],
       items: [
         { label: "외출하기",  nav: "outingHome",   image: "./images/outing.png" },
+        { label: "장소",      nav: "outingPlace",  image: "./images/outing_park1.png" },
         { label: "공부하기",  nav: "studyHome",    image: "./images/study.png" },
         { label: "과목",      nav: "subjectHome",  icon: "📚" },
         { label: "사람",      nav: "peopleHome",   image: "./images/outing_person_me.png" },
