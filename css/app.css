@@ -4078,3 +4078,37 @@ body {
     height: 78px;
   }
 }
+
+/* Keep normal menu tiles the same size as the main menu tiles. */
+.grid.detail,
+.grid.media,
+.grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) {
+  grid-template-columns: repeat(3, minmax(0, 245px)) !important;
+  justify-content: center;
+  justify-items: center;
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+.grid.detail > .tile,
+.grid.media > .tile,
+.grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) > .tile {
+  width: min(100%, 245px) !important;
+  max-width: 245px !important;
+}
+
+@media (max-width: 760px) {
+  .grid.detail,
+  .grid.media,
+  .grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) {
+    grid-template-columns: repeat(2, minmax(0, 210px)) !important;
+    max-width: 100%;
+  }
+
+  .grid.detail > .tile,
+  .grid.media > .tile,
+  .grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) > .tile {
+    width: min(100%, 210px) !important;
+    max-width: 210px !important;
+  }
+}
