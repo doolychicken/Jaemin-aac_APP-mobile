@@ -1695,11 +1695,17 @@ function renderDateStepFlowDrag() {
   function makeStepUnitPair(kind, unit, value, options = {}) {
     const pair = document.createElement("div");
     pair.className = `date-step-unit-pair date-step-unit-pair--${kind}`;
-    pair.appendChild(makeDropSlot(kind, unit, value, options));
     const label = document.createElement("span");
     label.className = "date-step-unit-label";
     label.textContent = unit;
-    pair.appendChild(label);
+    const slot = makeDropSlot(kind, unit, value, options);
+    if (kind === "weather") {
+      pair.appendChild(label);
+      pair.appendChild(slot);
+    } else {
+      pair.appendChild(slot);
+      pair.appendChild(label);
+    }
     return pair;
   }
 
@@ -2720,6 +2726,7 @@ function render() {
   if (screen.showPlayer) {
     playerWrapEl.style.display = "block";
     openInYoutubeButton.style.display = "inline-flex";
+    returnHintEl.style.display = isAppleMobile ? "block" : "none";
     const screenYoutubeUrls = (screen.items || []).map((x) => resolveYoutube(x)).filter(Boolean);
     if (screenYoutubeUrls.length && selectedYoutube && !screenYoutubeUrls.includes(selectedYoutube))
       selectedYoutube = "";
@@ -2728,6 +2735,7 @@ function render() {
   } else {
     playerWrapEl.style.display = "none";
     openInYoutubeButton.style.display = "none";
+    returnHintEl.style.display = "none";
     playerEl.src = "";
   }
 
@@ -2852,8 +2860,6 @@ if ("speechSynthesis" in window) {
 
 window.addEventListener("pointerdown", warmupTTS, { once: true });
 window.addEventListener("touchstart",  warmupTTS, { once: true });
-
-if (isAppleMobile) returnHintEl.style.display = "block";
 
 let resizeRenderTimer = null;
 window.addEventListener("resize", () => {

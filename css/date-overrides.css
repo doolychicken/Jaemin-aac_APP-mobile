@@ -48,9 +48,12 @@
   min-width: 0;
 }
 
-.date-step-unit-pair--year,
-.date-step-unit-pair--weather {
+.date-step-unit-pair--year {
   grid-template-columns: minmax(0, 310px) auto;
+}
+
+.date-step-unit-pair--weather {
+  grid-template-columns: auto minmax(0, 170px);
 }
 
 .date-step--year .date-step-unit-pair--year {
