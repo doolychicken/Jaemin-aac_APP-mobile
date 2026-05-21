@@ -1516,11 +1516,15 @@ function renderDateStepFlowDrag() {
   gridEl.style.display = "";
   gridEl.innerHTML = "";
   gridEl.className = `date-step date-step--${dateStepPage}`;
-  helperEl.textContent = "카드를 끌어서 같은 빈칸에 맞춰요.";
+  helperEl.textContent = "";
+  helperEl.style.display = "none";
+  crumbEl.textContent = "카드를 끌어서 같은 빈칸에 맞춰요.";
+  crumbEl.style.display = "block";
 
   const today = new Date();
   const weatherItems = DATA.screens.dateWeatherPicker.items || [];
   const weekdayChoices = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
+  let activeDragCard = null;
   const answer = {
     year: today.getFullYear(),
     month: today.getMonth() + 1,
@@ -1578,13 +1582,6 @@ function renderDateStepFlowDrag() {
     return source[kind] || fallbackValue;
   }
 
-  function matchDelay(kind) {
-    if (kind === "month" || kind === "day") return 650;
-    if (kind === "year" || kind === "weekday") return 1600;
-    if (kind === "weather") return 1200;
-    return 900;
-  }
-
   function fillMatchedSlot(kind, value, targetEl) {
     if (!targetEl) return;
     if (kind === "weather") {
@@ -1609,7 +1606,17 @@ function renderDateStepFlowDrag() {
     }
   }
 
-  function setMatched(kind, value, targetEl) {
+  function hideMatchedDragCard(kind, value, sourceEl) {
+    const cards = sourceEl ? [sourceEl] : Array.from(gridEl.querySelectorAll(".date-drag-card"));
+    cards.forEach((card) => {
+      if (card.dataset.kind === kind && card.dataset.value === String(value)) {
+        card.classList.add("is-used");
+        card.disabled = true;
+      }
+    });
+  }
+
+  function setMatched(kind, value, targetEl, sourceEl = activeDragCard) {
     if (kind === "year" && Number(value) !== answer.year) return showMiss();
     if (kind === "month" && Number(value) !== answer.month) return showMiss();
     if (kind === "day" && Number(value) !== answer.day) return showMiss();
@@ -1623,14 +1630,30 @@ function renderDateStepFlowDrag() {
     playPuzzleSound("success");
     fillMatchedSlot(kind, stored, targetEl);
     targetEl?.classList.add("is-matched");
-    speak(spokenStepLabel(kind, stored));
-    if (kind === "weather") window.setTimeout(() => playWeatherSound(value), 420);
+    hideMatchedDragCard(kind, value, sourceEl);
     const next = nextAfterMatch(kind);
-    if (dateStepPage === "summary") {
-      window.setTimeout(render, kind === "month" || kind === "day" ? 550 : 850);
-    } else {
-      window.setTimeout(() => gotoStep(next), matchDelay(kind));
-    }
+    const summaryComplete = dateStepPage === "summary" && isStepSummaryComplete(targetSelection);
+    const afterSpeech = Promise.resolve(speak(spokenStepLabel(kind, stored)));
+    const advance = () => {
+      if (dateStepPage === "summary") {
+        window.setTimeout(() => {
+          render();
+          if (summaryComplete) {
+            window.setTimeout(() => speak(dateSentenceText()), 260);
+          }
+        }, 180);
+      } else {
+        window.setTimeout(() => gotoStep(next), 180);
+      }
+    };
+    afterSpeech.finally(() => {
+      if (kind === "weather") {
+        playWeatherSound(value);
+        window.setTimeout(advance, 650);
+        return;
+      }
+      advance();
+    });
   }
 
   function showMiss() {
@@ -1666,7 +1689,8 @@ function renderDateStepFlowDrag() {
       const sourceKind = e.dataTransfer.getData("text/kind");
       const sourceValue = e.dataTransfer.getData("text/value");
       if (sourceKind !== kind || !sourceValue) return showMiss();
-      setMatched(kind, sourceValue, slot);
+      setMatched(kind, sourceValue, slot, activeDragCard);
+      activeDragCard = null;
     });
 
     if (options.weather && value) {
@@ -1713,14 +1737,21 @@ function renderDateStepFlowDrag() {
     const card = document.createElement("button");
     card.type = "button";
     card.className = `date-drag-card${options.weather ? " date-drag-card--weather" : ""}`;
+    card.dataset.kind = kind;
+    card.dataset.value = String(value);
     card.draggable = true;
     card.addEventListener("dragstart", (e) => {
+      activeDragCard = card;
       e.dataTransfer.setData("text/kind", kind);
       e.dataTransfer.setData("text/value", String(value));
       e.dataTransfer.effectAllowed = "move";
     });
+    card.addEventListener("dragend", () => {
+      activeDragCard = null;
+    });
     card.addEventListener("pointerdown", (e) => {
       if (e.pointerType === "mouse") return;
+      activeDragCard = card;
       const rect = card.getBoundingClientRect();
       const ghost = card.cloneNode(true);
       ghost.classList.add("date-drag-card--ghost");
@@ -1756,8 +1787,9 @@ function renderDateStepFlowDrag() {
         ghost.remove();
         const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".date-step-drop-slot");
         document.querySelectorAll(".date-step-drop-slot.is-ready").forEach((el) => el.classList.remove("is-ready"));
-        if (target?.dataset.kind === kind) setMatched(kind, value, target);
+        if (target?.dataset.kind === kind) setMatched(kind, value, target, card);
         else showMiss();
+        activeDragCard = null;
       }
 
       function cancel() {
@@ -1767,6 +1799,7 @@ function renderDateStepFlowDrag() {
         card.classList.remove("is-dragging");
         ghost.remove();
         document.querySelectorAll(".date-step-drop-slot.is-ready").forEach((el) => el.classList.remove("is-ready"));
+        activeDragCard = null;
       }
 
       card.addEventListener("pointermove", move);
@@ -1794,6 +1827,10 @@ function renderDateStepFlowDrag() {
   function twoNumberChoices(value, min, max) {
     const other = value < max ? value + 1 : value - 1;
     return [value, Math.max(min, Math.min(max, other))];
+  }
+
+  function isStepSummaryComplete(selection) {
+    return ["year", "month", "day", "weekday", "weather"].every((key) => selection[key]);
   }
 
   function resetStepFlow() {
@@ -1907,8 +1944,9 @@ function renderDateStepFlowDrag() {
   }
 
   if (!["year", "month", "day", "weekday", "weather"].includes(dateCardFocus)) dateCardFocus = "year";
+  const summaryComplete = isStepSummaryComplete(dateStepFinalSelection);
   const summary = document.createElement("section");
-  summary.className = "date-puzzle-board date-step-final-board";
+  summary.className = `date-puzzle-board date-step-final-board${summaryComplete ? " is-complete" : ""}`;
   summary.appendChild(makeStepUnitPair("year", "년", dateStepFinalSelection.year, { wide: true }));
   summary.appendChild(makeStepUnitPair("month", "월", dateStepFinalSelection.month));
   summary.appendChild(makeStepUnitPair("day", "일", dateStepFinalSelection.day));
@@ -1916,42 +1954,46 @@ function renderDateStepFlowDrag() {
   summary.appendChild(makeStepUnitPair("weather", "날씨", dateStepFinalSelection.weather, { weather: true, wide: true }));
   gridEl.appendChild(summary);
 
-  const tray = document.createElement("section");
-  tray.className = "date-puzzle-tray";
-  const trayTitle = document.createElement("div");
-  trayTitle.className = "date-puzzle-tray-title";
-  trayTitle.textContent = `${{ year: "년", month: "월", day: "일", weekday: "요일", weather: "날씨" }[dateCardFocus]} 카드`;
-  tray.appendChild(trayTitle);
-  const cardGrid = document.createElement("div");
-  cardGrid.className = `date-puzzle-card-grid date-puzzle-card-grid--${dateCardFocus}`;
-  if (dateCardFocus === "year") {
-    cardGrid.appendChild(makeDragCard("year", answer.year, String(answer.year)));
-  } else if (dateCardFocus === "month") {
-    twoNumberChoices(answer.month, 1, 12).forEach((month) => {
-      cardGrid.appendChild(makeDragCard("month", month, String(month)));
-    });
-  } else if (dateCardFocus === "day") {
-    twoNumberChoices(answer.day, 1, 31).forEach((day) => {
-      cardGrid.appendChild(makeDragCard("day", day, String(day)));
-    });
-  } else if (dateCardFocus === "weekday") {
-    weekdayChoices.forEach((weekday) => {
-      cardGrid.appendChild(makeDragCard("weekday", weekday, weekday.replace("요일", "")));
-    });
-  } else {
-    weatherItems.forEach((item) => {
-      cardGrid.appendChild(makeDragCard("weather", item.label, item.label, { image: item.image, weather: true }));
-    });
+  if (!summaryComplete) {
+    const tray = document.createElement("section");
+    tray.className = "date-puzzle-tray";
+    const trayTitle = document.createElement("div");
+    trayTitle.className = "date-puzzle-tray-title";
+    trayTitle.textContent = `${{ year: "년", month: "월", day: "일", weekday: "요일", weather: "날씨" }[dateCardFocus]} 카드`;
+    tray.appendChild(trayTitle);
+    const cardGrid = document.createElement("div");
+    cardGrid.className = `date-puzzle-card-grid date-puzzle-card-grid--${dateCardFocus}`;
+    if (dateCardFocus === "year") {
+      cardGrid.appendChild(makeDragCard("year", answer.year, String(answer.year)));
+    } else if (dateCardFocus === "month") {
+      twoNumberChoices(answer.month, 1, 12).forEach((month) => {
+        cardGrid.appendChild(makeDragCard("month", month, String(month)));
+      });
+    } else if (dateCardFocus === "day") {
+      twoNumberChoices(answer.day, 1, 31).forEach((day) => {
+        cardGrid.appendChild(makeDragCard("day", day, String(day)));
+      });
+    } else if (dateCardFocus === "weekday") {
+      weekdayChoices.forEach((weekday) => {
+        cardGrid.appendChild(makeDragCard("weekday", weekday, weekday.replace("요일", "")));
+      });
+    } else {
+      weatherItems.forEach((item) => {
+        cardGrid.appendChild(makeDragCard("weather", item.label, item.label, { image: item.image, weather: true }));
+      });
+    }
+    tray.appendChild(cardGrid);
+    gridEl.appendChild(tray);
   }
-  tray.appendChild(cardGrid);
-  gridEl.appendChild(tray);
 
-  const sentence = document.createElement("button");
-  sentence.type = "button";
-  sentence.className = "date-step-sentence";
-  sentence.textContent = dateSentenceText();
-  sentence.addEventListener("click", () => speak(dateSentenceText()));
-  gridEl.appendChild(sentence);
+  if (summaryComplete) {
+    const sentence = document.createElement("button");
+    sentence.type = "button";
+    sentence.className = "date-step-sentence date-step-sentence--complete";
+    sentence.textContent = dateSentenceText();
+    sentence.addEventListener("click", () => speak(dateSentenceText()));
+    gridEl.appendChild(sentence);
+  }
   addActions("weather", null, "문장 읽기");
 }
 
@@ -2718,6 +2760,7 @@ function render() {
   homeBtn.style.display = isMain ? "none" : "inline-flex";
   titleEl.textContent = screen.title || "AAC";
   helperEl.textContent = screen.helper || "";
+  helperEl.style.display = "";
   const crumb = breadcrumbText();
   crumbEl.textContent = crumb;
   crumbEl.style.display = crumb ? "block" : "none";
