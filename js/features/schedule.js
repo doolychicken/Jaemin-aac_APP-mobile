@@ -514,17 +514,17 @@ function renderHomeActivityPicker() {
   }
 
   function appendHomeActivityPager(group) {
-    if (group.id !== "outing" || group.activities.length <= 5) return;
+    if (group.id !== "outing" || group.activities.length <= 6) return;
 
     const btn = document.createElement("button");
-    btn.className = "tile tile-nav";
-    const lbl = document.createElement("div");
-    lbl.className = "tile-label";
-    lbl.textContent = homeActivityPage === 0 ? "다음" : "이전";
-    btn.appendChild(lbl);
+    const label = homeActivityPage === 0 ? "다음" : "이전";
+    btn.className = `tile-nav-arrow tile-nav-arrow--${label === "이전" ? "prev" : "next"}`;
+    btn.type = "button";
+    btn.setAttribute("aria-label", label);
+    btn.textContent = label;
     btn.addEventListener("click", () => {
       homeActivityPage = homeActivityPage === 0 ? 1 : 0;
-      speak(lbl.textContent);
+      speak(label);
       render();
     });
     gridEl.appendChild(btn);
@@ -568,8 +568,11 @@ function renderHomeActivityPicker() {
   const group = HOME_ACTIVITY_GROUPS.find((item) => item.id === homeActivityGroupId) || HOME_ACTIVITY_GROUPS[0];
   titleEl.textContent = `${group.label} 스케줄`;
   helperEl.textContent = "할 일을 클릭한 순서대로 골라요. 다시 누르면 취소돼요.";
+  if (group.id === "outing" && group.activities.length > 6) {
+    gridEl.className = "grid home-activity-picker grid--side-pager";
+  }
   const visibleActivities = group.id === "outing"
-    ? group.activities.slice(homeActivityPage === 0 ? 0 : 5, homeActivityPage === 0 ? 5 : group.activities.length)
+    ? group.activities.slice(homeActivityPage === 0 ? 0 : 6, homeActivityPage === 0 ? 6 : group.activities.length)
     : group.activities;
   visibleActivities.forEach(appendActivityTile);
   appendHomeActivityPager(group);

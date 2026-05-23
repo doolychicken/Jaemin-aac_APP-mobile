@@ -72,8 +72,36 @@ function buildStudyScreensMap() {
     { label: "과일",   nav: "studySticker_2",  image: "./images/stickerbook_fruit.png" },
     { label: "우리집", nav: "studySticker_3",  image: "./images/stickerbook_myhome.png" },
     { label: "동물",   nav: "studySticker_4",  image: "./images/stickerbook_animal.png" },
-    { label: "탈것",   nav: "studySticker_5",  image: "./images/stickerbook_vehicle.png" },
-    { label: "색깔",   nav: "studySticker_10", image: "./images/stickerbook_shape.png" }
+    { label: "탈것",   nav: "studyVehicles",   image: "./images/stickerbook_vehicle.png" },
+    { label: "색깔",   nav: "studySticker_10", image: "./images/stickerbook_shape.png" },
+    { label: "한글",   nav: "studyHangul",     image: "./images/stickerbook_language.png" },
+    { label: "이름",   nav: "studyNames",      image: "./images/person/me.png" }
+  ];
+
+  const hangulLetterItems = [
+    ["ㄱ", "기역"], ["ㄴ", "니은"], ["ㄷ", "디귿"], ["ㄹ", "리을"],
+    ["ㅁ", "미음"], ["ㅂ", "비읍"], ["ㅅ", "시옷"], ["ㅇ", "이응"],
+    ["ㅈ", "지읒"], ["ㅊ", "치읓"], ["ㅋ", "키읔"], ["ㅌ", "티읕"],
+    ["ㅍ", "피읖"], ["ㅎ", "히읗"]
+  ].map(([letter, speech]) => ({ label: letter, icon: letter, speech }));
+
+  const nameStudyItems = [
+    { label: "홍재민", image: "./images/person/me.png", speech: "내 이름은 홍재민이야" },
+    { label: "아빠 홍진혁", image: "./images/person/dad.png", speech: "아빠 이름은 홍진혁이야" },
+    { label: "엄마 김주리", image: "./images/person/mom.png", speech: "엄마 이름은 김주리야" }
+  ];
+
+  const vehicleStudyItems = [
+    { label: "자동차", image: "./images/transport_car.png" },
+    { label: "아빠 차", image: "./images/dad car.png" },
+    { label: "버스", image: "./images/transport_bus.png" },
+    { label: "버스 그림", image: "./images/bus.png", speech: "버스" },
+    { label: "학교 버스", image: "./images/school bus.png" },
+    { label: "콜택시", image: "./images/transport_calltaxi.png" },
+    { label: "지하철", image: "./images/transport_subway.png" },
+    { label: "지하철 타기", image: "./images/transport_subway_JM.png" },
+    { label: "자전거", image: "./images/transport_bike.png" },
+    { label: "탈것 퍼즐", image: "./images/knobpuzzle_vehicles.png", speech: "탈것" }
   ];
 
   const homeItems = [
@@ -95,6 +123,45 @@ function buildStudyScreensMap() {
     helper: "공부할 것을 선택하세요.",
     hero: [],
     items: appStudyItems,
+    layout: "main",
+    showPlayer: false
+  };
+
+  rest.studyHangul = {
+    title: "한글",
+    helper: "공부할 것을 선택하세요.",
+    hero: [],
+    items: [
+      { label: "ㄱㄴㄷ", nav: "studyHangulLetters", image: "./images/stickerbook_language.png" },
+      { label: "이름", nav: "studyNames", image: "./images/person/me.png" }
+    ],
+    layout: "main",
+    showPlayer: false
+  };
+
+  rest.studyHangulLetters = {
+    title: "ㄱㄴㄷ",
+    helper: "글자를 누르면 읽어 줘요.",
+    hero: [],
+    items: hangulLetterItems,
+    layout: "main",
+    showPlayer: false
+  };
+
+  rest.studyNames = {
+    title: "이름",
+    helper: "이름을 누르면 읽어 줘요.",
+    hero: [],
+    items: nameStudyItems,
+    layout: "main",
+    showPlayer: false
+  };
+
+  rest.studyVehicles = {
+    title: "탈것",
+    helper: "탈것을 누르면 읽어 줘요.",
+    hero: [],
+    items: vehicleStudyItems,
     layout: "main",
     showPlayer: false
   };
@@ -877,7 +944,7 @@ const DATA = {
       hero: [],
       items: [
         { label: "밥",   image: "./images/meal_rice.png" },
-        { label: "물",   icon: "💧" },
+        { label: "물",   image: "./images/water.png" },
         { label: "주스", image: "./images/meal_juice.png" },
         { label: "우유", image: "./images/meal_milk.png" },
         { label: "두유", image: "./images/meal_soymilk.png" }
@@ -941,7 +1008,7 @@ const DATA = {
       helper: "마시고 싶은 것을 선택하세요.",
       hero: [],
       items: [
-        { label: "물",       icon: "💧" },
+        { label: "물",       image: "./images/water.png" },
         { label: "주스",     image: "./images/meal_juice.png" },
         { label: "우유",     image: "./images/meal_milk.png" },
         { label: "두유",     image: "./images/meal_soymilk.png" },
