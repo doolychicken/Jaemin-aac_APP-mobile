@@ -195,6 +195,7 @@ const HOME_ACTIVITY_GROUPS = [
     image: "./images/outing.png",
     emoji: "🚶",
     activities: [
+      { label: "장보기",     image: "./images/outing_mart1.png", emoji: "🛒", nav: "scheduleShopping" },
       { label: "분리수거장", image: "./images/home_schedule/recycling_station.png", emoji: "♻️" },
       { label: "하나로마트", image: "./images/home_schedule/hanaro_mart.png", emoji: "🛒" },
       { label: "한살림",     image: "./images/home_schedule/hansalim.png", emoji: "🥬" },
@@ -224,6 +225,51 @@ let homeScheduleGroupId = "";
 let homeActivityPage = 0;
 let homeSchedule = [];
 let homeScheduleRemaining = [];
+
+const SHOPPING_PLACES = [
+  {
+    id: "hanaro",
+    label: "하나로마트",
+    image: "./images/home_schedule/hanaro_mart.png",
+    items: [
+      { label: "물", image: "./images/water.png" },
+      { label: "우유", image: "./images/meal_milk.png" },
+      { label: "두유", image: "./images/meal_soymilk.png" },
+      { label: "주스", image: "./images/meal_juice.png" },
+      { label: "바나나", image: "./images/bannana.png" },
+      { label: "딸기", image: "./images/strawberry.png" }
+    ]
+  },
+  {
+    id: "hansalim",
+    label: "한살림",
+    image: "./images/home_schedule/hansalim.png",
+    items: [
+      { label: "계란", image: "./images/eggs.png" },
+      { label: "우유", image: "./images/meal_milk.png" },
+      { label: "두유", image: "./images/meal_soymilk.png" },
+      { label: "사과", image: "./images/apple.png" },
+      { label: "토마토", image: "./images/tomato.png" },
+      { label: "물", image: "./images/water.png" }
+    ]
+  },
+  {
+    id: "paris",
+    label: "파리바게트",
+    image: "./images/home_schedule/paris_baguette.png",
+    items: [
+      { label: "빵", image: "./images/outing_bakery.png" },
+      { label: "에그타르트", image: "./images/meal_eggtart.png" },
+      { label: "우유", image: "./images/meal_milk.png" },
+      { label: "주스", image: "./images/meal_juice.png" },
+      { label: "케이크", image: "./images/outing_bakery.png" },
+      { label: "샌드위치", image: "./images/outing_bakery.png" }
+    ]
+  }
+];
+let shoppingPlace = null;
+let shoppingItems = [];
+let shoppingRemaining = [];
 const schedulePager = window.createTilePager({
   getScopeKey: () => navStack.map((x) => x.key).join("/"),
   render,
@@ -469,6 +515,12 @@ function renderHomeActivityPicker() {
     }
 
     btn.addEventListener("click", () => {
+      if (activity.nav) {
+        speak(activity.label);
+        pushScreen(activity.nav, activity.label);
+        render();
+        return;
+      }
       speak(activity.label);
       const idx = homeSchedule.indexOf(activity.label);
       if (idx >= 0) homeSchedule.splice(idx, 1);
@@ -684,6 +736,225 @@ function renderHomeScheduleRunner() {
   resetBtn.textContent = "처음부터 다시";
   resetBtn.addEventListener("click", () => {
     homeScheduleRemaining = [...homeSchedule];
+    render();
+  });
+  gridEl.appendChild(resetBtn);
+}
+
+// ── 장보기 AAC ──────────────────────────────────────────────────────────────
+function renderShoppingPlanner() {
+  appMainEl.classList.remove("app--spotlight");
+  spotlightViewEl.style.display = "none";
+  spotlightBtnEl.onclick = null;
+  heroEl.style.display = "none";
+  heroEl.className = "hero";
+  gridEl.style.display = "";
+  gridEl.innerHTML = "";
+  gridEl.className = "grid home-activity-picker";
+
+  function appendImageOrEmoji(btn, item, fallbackEmoji) {
+    if (item.image) {
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.label;
+      setupImageElement(img, true);
+      img.addEventListener("error", () => {
+        img.remove();
+        const art = document.createElement("div");
+        art.className = "tile-art";
+        art.textContent = item.emoji || fallbackEmoji || "🛒";
+        btn.insertBefore(art, btn.firstChild);
+      }, { once: true });
+      btn.appendChild(img);
+    } else {
+      const art = document.createElement("div");
+      art.className = "tile-art";
+      art.textContent = item.emoji || fallbackEmoji || "🛒";
+      btn.appendChild(art);
+    }
+  }
+
+  function appendTile(item, onClick, selectedIndex = -1) {
+    const btn = document.createElement("button");
+    btn.className = `tile${selectedIndex >= 0 ? " is-selected" : ""}`;
+    appendImageOrEmoji(btn, item, "🛒");
+    const lbl = document.createElement("div");
+    lbl.className = "tile-label";
+    lbl.textContent = item.label;
+    btn.appendChild(lbl);
+    if (selectedIndex >= 0) {
+      const check = document.createElement("span");
+      check.className = "tile-check";
+      check.textContent = String(selectedIndex + 1);
+      btn.appendChild(check);
+    }
+    btn.addEventListener("click", onClick);
+    gridEl.appendChild(btn);
+  }
+
+  function appendControls() {
+    const actions = document.createElement("div");
+    actions.className = "home-activity-actions";
+
+    const placeBtn = document.createElement("button");
+    placeBtn.className = "btn";
+    placeBtn.textContent = "장소 다시";
+    placeBtn.addEventListener("click", () => {
+      shoppingPlace = null;
+      shoppingItems = [];
+      speak("장소 다시");
+      render();
+    });
+    actions.appendChild(placeBtn);
+
+    const startBtn = document.createElement("button");
+    startBtn.className = "btn main";
+    startBtn.disabled = shoppingItems.length === 0;
+    startBtn.textContent = shoppingItems.length === 0
+      ? "살 물건을 선택하세요"
+      : `장보기 시작 → (${shoppingItems.length}개)`;
+    startBtn.addEventListener("click", () => {
+      if (!shoppingPlace || shoppingItems.length === 0) return;
+      shoppingRemaining = [
+        { type: "place", label: `${shoppingPlace.label}에 가요`, image: shoppingPlace.image, speech: `${shoppingPlace.label}에 가요` },
+        ...shoppingItems.map((item) => ({
+          type: "item",
+          label: `${item.label} 사요`,
+          image: item.image,
+          emoji: item.emoji,
+          speech: `${item.label} 사요`
+        }))
+      ];
+      speak("장보기 시작");
+      pushScreen("scheduleShoppingRun", "장보기 실행");
+      render();
+    });
+    actions.appendChild(startBtn);
+    gridEl.appendChild(actions);
+  }
+
+  if (!shoppingPlace) {
+    titleEl.textContent = "장보기";
+    helperEl.textContent = "어디로 갈까요?";
+    SHOPPING_PLACES.forEach((place) => {
+      appendTile(place, () => {
+        shoppingPlace = place;
+        shoppingItems = [];
+        speak(place.label);
+        render();
+      });
+    });
+    return;
+  }
+
+  titleEl.textContent = `${shoppingPlace.label} 장보기`;
+  helperEl.textContent = "살 물건을 클릭한 순서대로 골라요. 다시 누르면 취소돼요.";
+  shoppingPlace.items.forEach((item) => {
+    const selectedIndex = shoppingItems.findIndex((picked) => picked.label === item.label);
+    appendTile(item, () => {
+      speak(item.speech || item.label);
+      const idx = shoppingItems.findIndex((picked) => picked.label === item.label);
+      if (idx >= 0) shoppingItems.splice(idx, 1);
+      else shoppingItems.push(item);
+      render();
+    }, selectedIndex);
+  });
+  appendControls();
+}
+
+function renderShoppingRunner() {
+  appMainEl.classList.remove("app--spotlight");
+  spotlightViewEl.style.display = "none";
+  spotlightBtnEl.onclick = null;
+  heroEl.style.display = "none";
+  heroEl.className = "hero";
+  gridEl.style.display = "";
+  gridEl.innerHTML = "";
+  gridEl.className = "grid home-runner-grid";
+
+  if (shoppingRemaining.length === 0) {
+    const doneWrap = document.createElement("div");
+    doneWrap.className = "home-runner-complete";
+    const emoji = document.createElement("div");
+    emoji.className = "home-runner-complete-emoji";
+    emoji.textContent = "🛒";
+    const msg = document.createElement("div");
+    msg.className = "home-runner-complete-text";
+    msg.textContent = "장보기를 다 했어요!";
+    const sub = document.createElement("div");
+    sub.className = "home-runner-complete-sub";
+    sub.textContent = "정말 잘했어요!";
+    doneWrap.appendChild(emoji);
+    doneWrap.appendChild(msg);
+    doneWrap.appendChild(sub);
+    gridEl.appendChild(doneWrap);
+
+    const againBtn = document.createElement("button");
+    againBtn.className = "btn main";
+    againBtn.style.cssText = "grid-column:1/-1; margin-top:8px;";
+    againBtn.textContent = "다시 장보기";
+    againBtn.addEventListener("click", () => {
+      shoppingRemaining = [
+        { type: "place", label: `${shoppingPlace.label}에 가요`, image: shoppingPlace.image, speech: `${shoppingPlace.label}에 가요` },
+        ...shoppingItems.map((item) => ({ type: "item", label: `${item.label} 사요`, image: item.image, emoji: item.emoji, speech: `${item.label} 사요` }))
+      ];
+      render();
+    });
+    gridEl.appendChild(againBtn);
+    return;
+  }
+
+  helperEl.textContent = `남은 장보기: ${shoppingRemaining.length}가지 · 큰 카드를 눌러서 완료`;
+  const step = shoppingRemaining[0];
+  const btn = document.createElement("button");
+  btn.className = "tile home-runner-tile home-runner-current";
+  if (step.image) {
+    const img = document.createElement("img");
+    img.src = step.image;
+    img.alt = step.label;
+    setupImageElement(img, true);
+    btn.appendChild(img);
+  } else {
+    const art = document.createElement("div");
+    art.className = "tile-art";
+    art.textContent = step.emoji || "🛒";
+    btn.appendChild(art);
+  }
+  const lbl = document.createElement("div");
+  lbl.className = "tile-label";
+  lbl.textContent = step.label;
+  btn.appendChild(lbl);
+  const numBadge = document.createElement("span");
+  numBadge.className = "tile-check";
+  numBadge.textContent = String(Math.max(1, (shoppingItems.length + 1) - shoppingRemaining.length + 1));
+  btn.appendChild(numBadge);
+  btn.addEventListener("click", () => {
+    btn.disabled = true;
+    const afterSpeech = Promise.resolve(speak(`${step.label} 완료!`));
+    afterSpeech.finally(() => {
+      btn.classList.add("home-runner-done-anim");
+      btn.addEventListener("animationend", () => {
+        const finishedAll = shoppingRemaining.length === 1;
+        shoppingRemaining.shift();
+        render();
+        if (finishedAll) {
+          window.setTimeout(() => speak("장보기를 다 했어요! 정말 잘했어요!"), 250);
+        }
+      }, { once: true });
+    });
+  });
+  gridEl.appendChild(btn);
+
+  const resetBtn = document.createElement("button");
+  resetBtn.className = "btn";
+  resetBtn.style.cssText = "grid-column:1/-1; background:#f1f5f9; color:#64748b; min-height:56px; font-size:1rem;";
+  resetBtn.textContent = "처음부터 다시";
+  resetBtn.addEventListener("click", () => {
+    if (!shoppingPlace) return;
+    shoppingRemaining = [
+      { type: "place", label: `${shoppingPlace.label}에 가요`, image: shoppingPlace.image, speech: `${shoppingPlace.label}에 가요` },
+      ...shoppingItems.map((item) => ({ type: "item", label: `${item.label} 사요`, image: item.image, emoji: item.emoji, speech: `${item.label} 사요` }))
+    ];
     render();
   });
   gridEl.appendChild(resetBtn);
@@ -1582,6 +1853,8 @@ function renderFridaySlotPicker(slotKey) {
       "weeklyDetail",
       "homeActivityPicker",
       "homeScheduleRunner",
+      "shoppingPlanner",
+      "shoppingRunner",
       "therapyCenterPicker",
       "therapyClassPicker",
       "therapyPicker",
@@ -1610,6 +1883,10 @@ function renderFridaySlotPicker(slotKey) {
         renderHomeActivityPicker();
       } else if (screen.layout === "homeScheduleRunner") {
         renderHomeScheduleRunner();
+      } else if (screen.layout === "shoppingPlanner") {
+        renderShoppingPlanner();
+      } else if (screen.layout === "shoppingRunner") {
+        renderShoppingRunner();
       } else if (screen.layout === "therapyCenterPicker") {
         renderCenterPicker();
       } else if (screen.layout === "therapyClassPicker") {
@@ -1631,6 +1908,13 @@ function renderFridaySlotPicker(slotKey) {
         }
         homeActivityGroupId = "";
         homeActivityPage = 0;
+        render();
+        return true;
+      }
+      if (key === "scheduleShopping" && shoppingPlace) {
+        shoppingPlace = null;
+        shoppingItems = [];
+        shoppingRemaining = [];
         render();
         return true;
       }
@@ -1657,6 +1941,9 @@ function renderFridaySlotPicker(slotKey) {
       homeActivityGroupId = "";
       homeScheduleGroupId = "";
       homeActivityPage = 0;
+      shoppingPlace = null;
+      shoppingItems = [];
+      shoppingRemaining = [];
     }
 
     return {

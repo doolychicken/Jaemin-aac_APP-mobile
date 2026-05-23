@@ -395,7 +395,7 @@ const DATA = {
       items: [
         { label: "아이패드",   nav: "ipadHome",     image: "./images/ipad.png" },
         { label: "밥 먹기",   nav: "meal",         image: "./images/meal.png" },
-        { label: "화장실",    nav: "toilet",       image: "./images/toilet.png" },
+        { label: "화장실",    nav: "toilet",       image: "./images/pee.png" },
         { label: "학교",      nav: "outingSchool", image: "./images/outing_school1.png" },
         { label: "스케줄표",  nav: "scheduleHome", image: "./images/app_schedule.svg" },
         { label: "날짜",      nav: "dateHome",     image: "./images/app_date.svg" },
@@ -541,6 +541,7 @@ const DATA = {
       items: [
         { label: "오늘 일정", nav: "scheduleToday",        image: "./images/school_classroom.png" },
         { label: "집 스케줄", nav: "scheduleHomeActivity", image: "./images/home.png" },
+        { label: "장보기", nav: "scheduleShopping", image: "./images/outing_mart1.png" },
         { label: "주간 스케줄", nav: "scheduleWeekly",     image: "./images/school_classroom.png" },
         { label: "일일 스케줄표", nav: "scheduleDailyVisual", image: "./images/school_classroom.png" },
         { label: "내일 일정" }
@@ -600,6 +601,24 @@ const DATA = {
       hero: [],
       items: [],
       layout: "homeScheduleRunner",
+      showPlayer: false
+    },
+
+    scheduleShopping: {
+      title: "장보기",
+      helper: "어디에 가고 무엇을 살지 골라요.",
+      hero: [],
+      items: [],
+      layout: "shoppingPlanner",
+      showPlayer: false
+    },
+
+    scheduleShoppingRun: {
+      title: "장보기",
+      helper: "큰 카드를 눌러서 완료해요.",
+      hero: [],
+      items: [],
+      layout: "shoppingRunner",
       showPlayer: false
     },
 
@@ -947,7 +966,8 @@ const DATA = {
         { label: "물",   image: "./images/water.png" },
         { label: "주스", image: "./images/meal_juice.png" },
         { label: "우유", image: "./images/meal_milk.png" },
-        { label: "두유", image: "./images/meal_soymilk.png" }
+        { label: "두유", image: "./images/meal_soymilk.png" },
+        { label: "화장실", image: "./images/pee.png", speech: "화장실" }
       ],
       layout: "main"
     },
