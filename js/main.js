@@ -2776,30 +2776,116 @@ function renderStudyPuzzle(screen) {
     speak("여기가 아니에요");
   }
 
-  function setMatched(value, slotEl, sourceEl) {
-    if (!slotEl) return showMiss();
+  function isDragGhost(el) {
+    return !!el && (
+      el.classList.contains("study-puzzle-card--ghost")
+      || el.classList.contains("study-puzzle-card--number-ghost")
+    );
+  }
+
+  function removeDragGhost(el) {
+    if (isDragGhost(el)) el.remove();
+  }
+
+  function animatePuzzleMagnet(movingSourceEl, slotEl) {
+    return new Promise((resolve) => {
+      if (!movingSourceEl || !slotEl) return resolve();
+      const start = movingSourceEl.getBoundingClientRect();
+      const end = slotEl.getBoundingClientRect();
+      if (!start.width || !start.height || !end.width || !end.height) return resolve();
+
+      const movingEl = isDragGhost(movingSourceEl) ? movingSourceEl : movingSourceEl.cloneNode(true);
+      movingEl.classList.add("study-puzzle-card--magnet");
+      const pieceColor = window.getComputedStyle(movingSourceEl).getPropertyValue("--piece-color");
+      if (pieceColor) movingEl.style.setProperty("--piece-color", pieceColor.trim());
+      if (gridEl.classList.contains("study-puzzle--number")) {
+        movingEl.classList.add("study-puzzle-card--number-ghost");
+      }
+
+      Object.assign(movingEl.style, {
+        position: "fixed",
+        left: `${start.left}px`,
+        top: `${start.top}px`,
+        width: `${start.width}px`,
+        height: `${start.height}px`,
+        zIndex: "10000",
+        pointerEvents: "none",
+        margin: "0",
+        transform: "translate3d(0, 0, 0) scale(1)"
+      });
+
+      if (!movingEl.isConnected) document.body.appendChild(movingEl);
+
+      const targetLeft = end.left + ((end.width - start.width) / 2);
+      const targetTop = end.top + ((end.height - start.height) / 2);
+      const dx = targetLeft - start.left;
+      const dy = targetTop - start.top;
+      const scale = Math.min(1.06, Math.max(0.82, Math.min(end.width / start.width, end.height / start.height)));
+      let finished = false;
+
+      function finish() {
+        if (finished) return;
+        finished = true;
+        movingEl.removeEventListener("transitionend", finish);
+        slotEl.classList.add("is-docking");
+        movingEl.classList.add("is-docked");
+        movingEl.style.transition = "transform 0.14s ease-out, filter 0.14s ease-out";
+        movingEl.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${scale * 0.9})`;
+        movingEl.style.filter = "brightness(1.08)";
+        window.setTimeout(() => {
+          slotEl.classList.remove("is-docking");
+          movingEl.remove();
+          resolve();
+        }, 150);
+      }
+
+      movingEl.addEventListener("transitionend", (event) => {
+        if (event.propertyName === "transform") finish();
+      });
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          movingEl.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${scale})`;
+        });
+      });
+      window.setTimeout(finish, 620);
+    });
+  }
+
+  function setMatched(value, slotEl, sourceEl, movingEl = sourceEl) {
+    if (!slotEl) {
+      removeDragGhost(movingEl);
+      return showMiss();
+    }
     const index = Number(slotEl.dataset.index);
     const slot = slots[index];
     const piece = pieceByValue(value);
-    if (!slot || String(slot.value) !== String(value)) return showMiss();
+    if (!slot || String(slot.value) !== String(value)) {
+      removeDragGhost(movingEl);
+      return showMiss();
+    }
 
-    state.matches[index] = String(value);
-    playPuzzleSound("success");
-    slotEl.classList.add("is-filled", "is-snap");
-    const main = slotEl.querySelector(".study-puzzle-slot-main");
-    if (main) main.textContent = slot.label;
-    sourceEl?.classList.add("is-used");
-    sourceEl?.setAttribute("disabled", "true");
+    sourceEl?.classList.add("is-snapping");
+    animatePuzzleMagnet(movingEl || sourceEl, slotEl).finally(() => {
+      state.matches[index] = String(value);
+      playPuzzleSound("success");
+      slotEl.classList.remove("is-empty");
+      slotEl.classList.add("is-filled", "is-snap");
+      const main = slotEl.querySelector(".study-puzzle-slot-main");
+      if (main) main.textContent = slot.label;
+      sourceEl?.classList.remove("is-snapping");
+      sourceEl?.classList.add("is-used");
+      sourceEl?.setAttribute("disabled", "true");
 
-    const completed = isComplete();
-    const afterSpeech = Promise.resolve(speak(piece.speech || piece.label));
-    afterSpeech.finally(() => {
-      window.setTimeout(() => {
-        render();
-        if (completed) {
-          window.setTimeout(() => speak(puzzle.completeSpeech || "퍼즐 완료! 정말 잘했어요!"), 260);
-        }
-      }, 180);
+      const completed = isComplete();
+      const afterSpeech = Promise.resolve(speak(piece.speech || piece.label));
+      afterSpeech.finally(() => {
+        window.setTimeout(() => {
+          render();
+          if (completed) {
+            window.setTimeout(() => speak(puzzle.completeSpeech || "퍼즐 완료! 정말 잘했어요!"), 260);
+          }
+        }, 180);
+      });
     });
   }
 
@@ -2916,13 +3002,18 @@ function renderStudyPuzzle(screen) {
         btn.removeEventListener("pointerup", up);
         btn.removeEventListener("pointercancel", cancel);
         btn.classList.remove("is-dragging");
-        ghost.remove();
         const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".study-puzzle-slot");
         document.querySelectorAll(".study-puzzle-slot.is-ready").forEach((el) => el.classList.remove("is-ready"));
         suppressNextClick = true;
-        if (!didMove) speakPiece();
-        else if (target) setMatched(piece.value, target, btn);
-        else speakPiece();
+        if (!didMove) {
+          ghost.remove();
+          speakPiece();
+        } else if (target) {
+          setMatched(piece.value, target, btn, ghost);
+        } else {
+          ghost.remove();
+          speakPiece();
+        }
         activePuzzleCard = null;
       }
 
