@@ -1219,7 +1219,7 @@ function renderWeeklySchedule() {
     return;
   }
 
-  titleEl.textContent = "요일별 스케줄";
+  titleEl.textContent = "요일별 스케줄 버전 1";
   helperEl.textContent = "월요일부터 일요일까지 한 장에 볼 수 있어요. 요일을 누르면 스케줄을 넣거나 볼 수 있어요.";
 
   // 최대 행 수 계산 (시간대 레이블 수 vs 실제 활동 수 중 큰 것)
@@ -1359,6 +1359,61 @@ function renderWeeklySchedule() {
   });
   btnRow.appendChild(resetBtn);
   gridEl.appendChild(btnRow);
+}
+
+function renderWeeklyDayPicker() {
+  appMainEl.classList.remove("app--spotlight");
+  spotlightViewEl.style.display = "none";
+  spotlightBtnEl.onclick = null;
+  heroEl.style.display = "none";
+  heroEl.className = "hero";
+  gridEl.style.display = "";
+  gridEl.innerHTML = "";
+  gridEl.className = "weekly-day-picker";
+
+  if (weeklyEditMode) {
+    renderWeeklyEditor();
+    return;
+  }
+
+  titleEl.textContent = "요일별 스케줄 버전 2";
+  helperEl.textContent = "요일을 선택하면 그날 스케줄을 볼 수 있어요.";
+
+  SCHEDULE_DAYS.forEach((day, di) => {
+    const c = WEEKLY_DAY_COLORS[di];
+    const acts = weeklyScheduleData[day] || [];
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "weekly-day-card";
+    card.style.setProperty("--day-bg", c.bg);
+    card.style.setProperty("--day-border", c.border);
+    card.style.setProperty("--day-text", c.text);
+    card.setAttribute("aria-label", `${formatScheduleDayLabel(day)} 스케줄 보기`);
+
+    const label = document.createElement("div");
+    label.className = "weekly-day-card-title";
+    label.textContent = formatScheduleDayLabel(day);
+    card.appendChild(label);
+
+    const badge = document.createElement("div");
+    badge.className = "weekly-day-card-badge";
+    badge.textContent = day;
+    card.appendChild(badge);
+
+    const count = document.createElement("div");
+    count.className = "weekly-day-card-count";
+    count.textContent = acts.length ? `${acts.length}개 스케줄` : "스케줄 없음";
+    card.appendChild(count);
+
+    card.addEventListener("click", () => {
+      speak(formatScheduleDayLabel(day));
+      weeklySelectedDay = day;
+      pushScreen("scheduleWeeklyDay", formatScheduleDayLabel(day));
+      render();
+    });
+
+    gridEl.appendChild(card);
+  });
 }
 
 // ── 일일 / 요일별 시각 스케줄 — 공통 카드 그리드 (일일과 동일 UI) ─────────────
@@ -2066,6 +2121,7 @@ function renderFridaySlotPicker(slotKey) {
 
     const scheduleLayouts = new Set([
       "weeklySchedule",
+      "weeklyDayPicker",
       "dailyVisual",
       "weeklyDay",
       "weeklyDetail",
@@ -2097,6 +2153,8 @@ function renderFridaySlotPicker(slotKey) {
 
       if (screen.layout === "weeklySchedule") {
         renderWeeklySchedule();
+      } else if (screen.layout === "weeklyDayPicker") {
+        renderWeeklyDayPicker();
       } else if (screen.layout === "dailyVisual") {
         renderDailyVisual();
       } else if (screen.layout === "weeklyDay") {
@@ -2154,7 +2212,7 @@ function renderFridaySlotPicker(slotKey) {
         render();
         return true;
       }
-      if (key === "scheduleWeekly" && weeklyEditMode) {
+      if ((screen.layout === "weeklySchedule" || screen.layout === "weeklyDayPicker") && weeklyEditMode) {
         if (weeklyEditPersonFor !== null) {
           weeklyEditPersonFor = null;
         } else {

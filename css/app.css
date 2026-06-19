@@ -3907,6 +3907,75 @@ body {
   font-size: clamp(1rem, 1.5vw, 1.2rem);
 }
 
+.weekly-day-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 22px);
+  width: 100%;
+  align-self: stretch;
+  padding: clamp(8px, 1.4vw, 18px);
+  box-sizing: border-box;
+}
+
+.weekly-day-card {
+  position: relative;
+  min-width: 0;
+  min-height: clamp(128px, 18vh, 210px);
+  aspect-ratio: 1.45 / 1;
+  border: 2px solid var(--day-border, #dbeafe);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--day-bg, #eff6ff), #ffffff);
+  color: var(--day-text, #25395f);
+  box-shadow: 0 16px 36px rgba(76, 111, 174, 0.14);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 18px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.weekly-day-card:active {
+  transform: scale(0.98);
+}
+
+.weekly-day-card-title {
+  font-size: clamp(1.45rem, 3vw, 2.45rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.weekly-day-card-badge {
+  width: clamp(42px, 6vw, 64px);
+  height: clamp(42px, 6vw, 64px);
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--day-border, #dbeafe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--day-text, #25395f);
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  font-weight: 900;
+  box-shadow: 0 6px 14px rgba(76, 111, 174, 0.12);
+}
+
+.weekly-day-card-count {
+  font-size: clamp(0.92rem, 1.4vw, 1.1rem);
+  font-weight: 800;
+  color: #5b6f96;
+}
+
+@media (min-width: 768px) {
+  .weekly-day-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ── 하루 스케줄 페이지 ── */
 .wday-outer {
   display: flex;
