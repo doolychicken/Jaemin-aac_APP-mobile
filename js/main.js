@@ -143,7 +143,11 @@ const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const useDirectYoutubeOpen = true;
 
-const isAndroid = /android/i.test(navigator.userAgent);
+const ua = navigator.userAgent || "";
+const isAndroid = /android/i.test(ua);
+const isChromiumAndroid = isAndroid && /Chrome\/|CriOS\//.test(ua) && !/SamsungBrowser|EdgA|OPR\//.test(ua);
+const shouldPreferRemoteTts = isAndroid && (!isChromiumAndroid || /SamsungBrowser|; wv|Firefox|EdgA|OPR\//.test(ua));
+let remoteTtsAudio = null;
 let softFullscreenMode = false;
 
 function getFullscreenElement() {
@@ -274,12 +278,42 @@ function unlockAudioOnce() {
 }
 
 // ── 2. speak: 안드로이드 정교한 예외 처리 ────────────────────────────────────
+function speakWithRemoteTts(text) {
+  const spokenText = String(text || "").trim();
+  if (!spokenText) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    try {
+      if (!remoteTtsAudio) remoteTtsAudio = new Audio();
+      remoteTtsAudio.pause();
+      remoteTtsAudio.currentTime = 0;
+      const shortText = spokenText.slice(0, 180);
+      remoteTtsAudio.src = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=${encodeURIComponent(shortText)}`;
+      remoteTtsAudio.preload = "auto";
+      remoteTtsAudio.volume = 1;
+      const done = (ok) => {
+        remoteTtsAudio.onended = null;
+        remoteTtsAudio.onerror = null;
+        resolve(ok);
+      };
+      remoteTtsAudio.onended = () => done(true);
+      remoteTtsAudio.onerror = () => done(false);
+      const playResult = remoteTtsAudio.play();
+      if (playResult && typeof playResult.then === "function") {
+        playResult.catch(() => done(false));
+      }
+    } catch (_) {
+      resolve(false);
+    }
+  });
+}
+
 function speak(text) {
-  if (!("speechSynthesis" in window)) return Promise.resolve();
-  if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
   const spokenText = String(text || "").trim();
   if (!spokenText) return Promise.resolve();
   ttsRequestId += 1;
+  if (shouldPreferRemoteTts) return speakWithRemoteTts(spokenText);
+  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) return speakWithRemoteTts(spokenText);
+  if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
 
   return new Promise((resolve) => {
     const doSpeak = () => {
@@ -292,11 +326,15 @@ function speak(text) {
         clearTimeout(fallbackTimer);
         resolve();
       };
+      const finishWithRemoteFallback = () => {
+        if (done) return;
+        speakWithRemoteTts(spokenText).finally(finish);
+      };
       const fallbackMs = Math.min(3600, Math.max(650, String(text || "").length * 120 + 360));
       const fallbackTimer = setTimeout(finish, fallbackMs);
 
       u.onend = finish;
-      u.onerror = finish;
+      u.onerror = finishWithRemoteFallback;
 
       if (preferredKoVoice) {
         u.voice = preferredKoVoice;
@@ -307,7 +345,7 @@ function speak(text) {
       u.rate = isAndroid ? 1.0 : 1.15;
       u.pitch = 1.0;
       try { window.speechSynthesis.resume(); } catch (_) {}
-      try { window.speechSynthesis.speak(u); } catch (_) { finish(); }
+      try { window.speechSynthesis.speak(u); } catch (_) { finishWithRemoteFallback(); }
     };
 
     if (isAndroid) {
