@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
@@ -9,16 +9,15 @@
   <link rel="preconnect" href="https://www.youtube.com" />
   <link rel="preconnect" href="https://img.youtube.com" />
   <link rel="preconnect" href="https://i.ytimg.com" />
-  <title>AAC 앱 - Mobile</title>
+  <title>AAC 앱 - iPad</title>
   <base href="../" />
-  <link rel="stylesheet" href="./mobile/css/app.css?v=225" />
-  <link rel="stylesheet" href="./mobile/css/features/study-puzzle.css?v=225" />
-  <link rel="stylesheet" href="./mobile/css/date-overrides.css?v=225" />
-  <link rel="stylesheet" href="./mobile/css/app-mobile.css?v=225" />
+  <link rel="stylesheet" href="./ipad/css/app.css?v=225" />
+  <link rel="stylesheet" href="./ipad/css/features/study-puzzle.css?v=225" />
+  <link rel="stylesheet" href="./ipad/css/date-overrides.css?v=225" />
 </head>
 <body>
   <main class="app">
-    <div id="returnHint" class="return-hint">유튜브 시청 후 브라우저의 뒤로 버튼으로 AAC로 돌아오세요.</div>
+    <div id="returnHint" class="return-hint">유튜브 시청 후 Safari 왼쪽 상단 뒤로 버튼으로 AAC로 돌아오세요.</div>
     <div class="topbar">
       <div>
         <h1 id="screenTitle" class="title">메인 화면</h1>
@@ -53,18 +52,19 @@
     <section id="buttonGrid" class="grid"></section>
   </main>
 
-  <script src="./mobile/js/data/study-data.js?v=225"></script>
-  <script src="./mobile/js/data/app-data.js?v=225"></script>
-  <script src="./mobile/js/core/pager.js?v=225"></script>
-  <script src="./mobile/js/features/schedule.js?v=225"></script>
-  <script src="./mobile/js/features/study-puzzle.js?v=225"></script>
-  <script src="./mobile/js/main-mobile.js?v=225"></script>
+  <script src="./ipad/js/data/study-data.js?v=225"></script>
+  <script src="./ipad/js/data/app-data.js?v=225"></script>
+  <script src="./ipad/js/core/pager.js?v=225"></script>
+  <script src="./ipad/js/features/schedule.js?v=225"></script>
+  <script src="./ipad/js/features/study-puzzle.js?v=225"></script>
+  <script src="./ipad/js/main.js?v=225"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        /* sw.js에도 v를 붙이지 않으면 Safari가 옛 서비스 워커를 붙잡는 경우가 있음 */
         navigator.serviceWorker.register('./sw.js?v=225', { updateViaCache: 'none' })
           .then(function (reg) { reg.update().catch(function () {}); })
-          .catch(function () {});
+          .catch(function () { /* local file 등 */ });
       });
     }
   </script>
