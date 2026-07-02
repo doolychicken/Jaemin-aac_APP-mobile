@@ -144,3 +144,151 @@
     width: min(88vw, 360px);
   }
 }
+
+/* Phone landscape: keep the title bar compact so the tiles remain visible. */
+@media (max-height: 500px) and (orientation: landscape) {
+  html,
+  body {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .app {
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    padding:
+      max(4px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+    gap: 4px;
+  }
+
+  @supports (height: 100svh) {
+    .app {
+      height: 100svh;
+    }
+  }
+
+  .topbar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    min-height: 0;
+  }
+
+  .topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 0.86rem;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .crumb,
+  .muted {
+    display: none !important;
+  }
+
+  .topbar-btns {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .home-btn,
+  .back-btn,
+  .fullscreen-btn {
+    min-width: 0;
+    min-height: 30px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .fullscreen-btn {
+    min-width: 74px;
+  }
+
+  .home-btn {
+    min-width: 48px;
+  }
+
+  .back-btn {
+    min-width: 62px;
+  }
+
+  .grid,
+  .grid.detail,
+  .grid.media,
+  .grid.home-activity-picker,
+  .grid.grid--mobile-main-menu,
+  .grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    align-content: start !important;
+    gap: 6px !important;
+    padding: 0 0 max(4px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid > .tile,
+  .grid.detail > .tile,
+  .grid.media > .tile,
+  .grid.home-activity-picker > .tile,
+  .grid.grid--mobile-main-menu > .tile,
+  .grid:not(.detail):not(.media):not(.grid--side-pager):not(.home-activity-picker):not(.home-runner-grid):not(.outing-summary-tiles) > .tile {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 / 0.82 !important;
+    padding: 5px !important;
+    gap: 3px !important;
+  }
+
+  .tile img,
+  .tile-art,
+  .grid.grid--mobile-main-menu > .tile img,
+  .grid.grid--mobile-main-menu > .tile .tile-art {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .tile-label,
+  .grid.grid--mobile-main-menu > .tile .tile-label {
+    min-height: 1.35em;
+    font-size: clamp(0.66rem, 1.9vw, 0.82rem);
+    line-height: 1.05;
+  }
+
+  .tile-nav-arrow,
+  .grid.grid--side-pager > .tile.tile-side-slot,
+  .grid.grid--side-pager > .tile.quick-toilet-side {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    aspect-ratio: 1 / 0.82 !important;
+  }
+}
