@@ -152,6 +152,14 @@ const shouldPreferRemoteTts = isAndroid && (!isChromiumAndroid || /SamsungBrowse
 let remoteTtsAudio = null;
 let softFullscreenMode = false;
 
+function remoteTtsUrls(text) {
+  const q = encodeURIComponent(String(text || "").trim().slice(0, 180));
+  return [
+    `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=${q}`,
+    `https://translate.google.co.kr/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=${q}`
+  ];
+}
+
 function getFullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
@@ -280,31 +288,130 @@ function unlockAudioOnce() {
 }
 
 // ── 2. speak: 안드로이드 정교한 예외 처리 ────────────────────────────────────
+function playTtsFallbackTone() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return Promise.resolve();
+    const ctx = sharedAudioCtx || new AudioCtx();
+    sharedAudioCtx = ctx;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    const osc = ctx.createOscillator();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(740, now);
+    osc.frequency.setValueAtTime(980, now + 0.16);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  } catch (_) {}
+  return Promise.resolve();
+}
+
 function speakWithRemoteTts(text) {
   const spokenText = String(text || "").trim();
   if (!spokenText) return Promise.resolve(false);
-  return new Promise((resolve) => {
-    try {
-      if (!remoteTtsAudio) remoteTtsAudio = new Audio();
-      remoteTtsAudio.pause();
-      remoteTtsAudio.currentTime = 0;
-      const shortText = spokenText.slice(0, 180);
-      remoteTtsAudio.src = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ko&q=${encodeURIComponent(shortText)}`;
-      remoteTtsAudio.preload = "auto";
-      remoteTtsAudio.volume = 1;
+  const urls = remoteTtsUrls(spokenText);
+  let index = 0;
+
+  function tryNext() {
+    if (index >= urls.length) return Promise.resolve(false);
+    const src = urls[index++];
+    return new Promise((resolve) => {
+      let settled = false;
+      let timer = null;
       const done = (ok) => {
-        remoteTtsAudio.onended = null;
-        remoteTtsAudio.onerror = null;
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (remoteTtsAudio) {
+          remoteTtsAudio.onended = null;
+          remoteTtsAudio.onerror = null;
+          remoteTtsAudio.oncanplaythrough = null;
+        }
         resolve(ok);
       };
-      remoteTtsAudio.onended = () => done(true);
-      remoteTtsAudio.onerror = () => done(false);
-      const playResult = remoteTtsAudio.play();
-      if (playResult && typeof playResult.then === "function") {
-        playResult.catch(() => done(false));
+
+      try {
+        if (!remoteTtsAudio) remoteTtsAudio = new Audio();
+        remoteTtsAudio.pause();
+        remoteTtsAudio.removeAttribute("src");
+        remoteTtsAudio.load();
+        remoteTtsAudio.src = src;
+        remoteTtsAudio.preload = "auto";
+        remoteTtsAudio.volume = 1;
+        remoteTtsAudio.onended = () => done(true);
+        remoteTtsAudio.onerror = () => done(false);
+        remoteTtsAudio.oncanplaythrough = () => {
+          const playResult = remoteTtsAudio.play();
+          if (playResult && typeof playResult.then === "function") {
+            playResult.catch(() => done(false));
+          }
+        };
+        timer = setTimeout(() => done(false), 2200);
+        const playResult = remoteTtsAudio.play();
+        if (playResult && typeof playResult.then === "function") {
+          playResult.catch(() => {
+            try { remoteTtsAudio.load(); } catch (_) {}
+          });
+        }
+      } catch (_) {
+        done(false);
+      }
+    }).then((ok) => ok || tryNext());
+  }
+
+  return tryNext();
+}
+
+function speakWithBrowserTts(spokenText) {
+  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) {
+    return playTtsFallbackTone();
+  }
+  if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
+  return new Promise((resolve) => {
+    try {
+      const doSpeak = () => {
+        if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
+        const u = new SpeechSynthesisUtterance(spokenText);
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(fallbackTimer);
+          resolve();
+        };
+        const fallbackTimer = setTimeout(finish, Math.min(3600, Math.max(650, spokenText.length * 120 + 360)));
+
+        u.onend = finish;
+        u.onerror = () => playTtsFallbackTone().finally(finish);
+        if (preferredKoVoice) {
+          u.voice = preferredKoVoice;
+          u.lang = preferredKoVoice.lang || "ko-KR";
+        } else {
+          u.lang = "ko-KR";
+        }
+        u.rate = isAndroid ? 1.0 : 1.15;
+        u.pitch = 1.0;
+        try { window.speechSynthesis.resume(); } catch (_) {}
+        try { window.speechSynthesis.speak(u); } catch (_) { playTtsFallbackTone().finally(finish); }
+      };
+
+      if (isAndroid) {
+        unlockAudioOnce();
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+        try { window.speechSynthesis.resume(); } catch (_) {}
+        setTimeout(doSpeak, 80);
+      } else {
+        window.speechSynthesis.cancel();
+        doSpeak();
       }
     } catch (_) {
-      resolve(false);
+      playTtsFallbackTone().finally(resolve);
     }
   });
 }
@@ -313,53 +420,12 @@ function speak(text) {
   const spokenText = String(text || "").trim();
   if (!spokenText) return Promise.resolve();
   ttsRequestId += 1;
-  if (shouldPreferRemoteTts) return speakWithRemoteTts(spokenText);
-  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) return speakWithRemoteTts(spokenText);
-  if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
-
-  return new Promise((resolve) => {
-    const doSpeak = () => {
-      if (!preferredKoVoice) preferredKoVoice = pickPreferredKoVoice();
-      const u = new SpeechSynthesisUtterance(spokenText);
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        clearTimeout(fallbackTimer);
-        resolve();
-      };
-      const finishWithRemoteFallback = () => {
-        if (done) return;
-        speakWithRemoteTts(spokenText).finally(finish);
-      };
-      const fallbackMs = Math.min(3600, Math.max(650, String(text || "").length * 120 + 360));
-      const fallbackTimer = setTimeout(finish, fallbackMs);
-
-      u.onend = finish;
-      u.onerror = finishWithRemoteFallback;
-
-      if (preferredKoVoice) {
-        u.voice = preferredKoVoice;
-        u.lang = preferredKoVoice.lang || "ko-KR";
-      } else {
-        u.lang = "ko-KR";
-      }
-      u.rate = isAndroid ? 1.0 : 1.15;
-      u.pitch = 1.0;
-      try { window.speechSynthesis.resume(); } catch (_) {}
-      try { window.speechSynthesis.speak(u); } catch (_) { finishWithRemoteFallback(); }
-    };
-
-    if (isAndroid) {
-      unlockAudioOnce();
-      try { window.speechSynthesis.cancel(); } catch (_) {}
-      try { window.speechSynthesis.resume(); } catch (_) {}
-      setTimeout(doSpeak, 140);
-    } else {
-      window.speechSynthesis.cancel();
-      doSpeak();
-    }
-  });
+  if (shouldPreferRemoteTts) {
+    return speakWithRemoteTts(spokenText).then((ok) => (
+      ok ? undefined : speakWithBrowserTts(spokenText)
+    ));
+  }
+  return speakWithBrowserTts(spokenText).then(() => undefined);
 }
 
 function playPuzzleSound(kind = "success") {
