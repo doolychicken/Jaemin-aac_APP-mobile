@@ -4,7 +4,7 @@
  * On first visit, pre-caches all images so subsequent loads are instant.
  */
 
-const CACHE_VERSION = 'v225';
+const CACHE_VERSION = 'mobile-v1';
 const CACHE_NAME = `jaemin-aac-${CACHE_VERSION}`;
 
 self.addEventListener('message', (event) => {
@@ -16,27 +16,17 @@ self.addEventListener('message', (event) => {
 const PRECACHE_ASSETS = [
   './',
   './index.html',
-  './ipad/index.html',
   './mobile/index.html',
-  './ipad/css/app.css',
-  './ipad/css/features/study-puzzle.css',
-  './ipad/css/date-overrides.css',
-  './ipad/js/data/study-data.js',
-  './ipad/js/data/app-data.js',
-  './ipad/js/core/pager.js',
-  './ipad/js/features/schedule.js',
-  './ipad/js/features/study-puzzle.js',
-  './ipad/js/main.js',
-  './mobile/css/app.css',
-  './mobile/css/features/study-puzzle.css',
-  './mobile/css/date-overrides.css',
-  './mobile/css/app-mobile.css',
-  './mobile/js/data/study-data.js',
-  './mobile/js/data/app-data.js',
-  './mobile/js/core/pager.js',
-  './mobile/js/features/schedule.js',
-  './mobile/js/features/study-puzzle.js',
-  './mobile/js/main-mobile.js',
+  './css/app.css',
+  './css/features/study-puzzle.css',
+  './css/date-overrides.css',
+  './css/app-mobile.css',
+  './js/data/study-data.js',
+  './js/data/app-data.js',
+  './js/core/pager.js',
+  './js/features/schedule.js',
+  './js/features/study-puzzle.js',
+  './js/main-mobile.js',
   // ── Images ──
   './images/apple.png',
   './images/bannana.png',

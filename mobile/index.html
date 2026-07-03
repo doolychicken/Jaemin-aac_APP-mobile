@@ -2,71 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="preconnect" href="https://www.youtube.com" />
-  <link rel="preconnect" href="https://img.youtube.com" />
-  <link rel="preconnect" href="https://i.ytimg.com" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="refresh" content="0; url=../" />
   <title>AAC 앱 - Mobile</title>
-  <base href="../" />
-  <link rel="stylesheet" href="./mobile/css/app.css?v=227" />
-  <link rel="stylesheet" href="./mobile/css/features/study-puzzle.css?v=227" />
-  <link rel="stylesheet" href="./mobile/css/date-overrides.css?v=227" />
-  <link rel="stylesheet" href="./mobile/css/app-mobile.css?v=227" />
+  <script>
+    window.location.replace("../");
+  </script>
 </head>
 <body>
-  <main class="app">
-    <div id="returnHint" class="return-hint">유튜브 시청 후 브라우저의 뒤로 버튼으로 AAC로 돌아오세요.</div>
-    <div class="topbar">
-      <div>
-        <h1 id="screenTitle" class="title">메인 화면</h1>
-        <p id="breadcrumb" class="crumb" style="display:none;"></p>
-      </div>
-      <div class="topbar-btns">
-        <button id="fullscreenButton" class="fullscreen-btn" type="button" aria-pressed="false">⛶ 전체화면</button>
-        <button id="homeButton" class="home-btn" style="display:none;">🏠 홈</button>
-        <button id="backButton" class="back-btn" style="display:none;">뒤로 가기</button>
-      </div>
-    </div>
-
-    <section id="playerWrap" class="player-wrap" style="display:none;">
-      <iframe
-        id="youtubePlayer"
-        class="player"
-        title="AAC YouTube Player"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen>
-      </iframe>
-    </section>
-    <button id="openInYoutubeButton" class="back-btn" style="display:none; align-self:flex-start;">유튜브에서 열기</button>
-
-    <p id="helperText" class="muted">버튼을 누르면 음성으로 읽어줍니다.</p>
-    <section id="heroRow" class="hero" style="display:none;"></section>
-    <section id="spotlightView" class="spotlight" style="display:none;" aria-label="선택한 그림">
-      <button type="button" id="spotlightButton" class="spotlight-button">
-        <img id="spotlightImage" alt="" />
-      </button>
-    </section>
-    <section id="buttonGrid" class="grid"></section>
-  </main>
-
-  <script src="./mobile/js/data/study-data.js?v=227"></script>
-  <script src="./mobile/js/data/app-data.js?v=227"></script>
-  <script src="./mobile/js/core/pager.js?v=227"></script>
-  <script src="./mobile/js/features/schedule.js?v=227"></script>
-  <script src="./mobile/js/features/study-puzzle.js?v=227"></script>
-  <script src="./mobile/js/main-mobile.js?v=227"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=227', { updateViaCache: 'none' })
-          .then(function (reg) { reg.update().catch(function () {}); })
-          .catch(function () {});
-      });
-    }
-  </script>
+  <p><a href="../">모바일 AAC 앱으로 이동</a></p>
 </body>
 </html>
