@@ -405,6 +405,7 @@ function playLocalSpeech(text, requestId) {
       localSpeechAudio.src = src;
       localSpeechAudio.preload = "auto";
       localSpeechAudio.volume = 1;
+      localSpeechAudio.playbackRate = 1.15;
       localSpeechAudio.onended = () => done(true);
       localSpeechAudio.onerror = () => done(false);
       localSpeechAudio.oncanplaythrough = () => {
