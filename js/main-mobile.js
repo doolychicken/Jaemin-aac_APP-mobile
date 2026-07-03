@@ -38,6 +38,12 @@ function breadcrumbText() {
 }
 const mainPager = window.createTilePager({
   getScopeKey: () => navStack.map((x) => x.key).join("/"),
+  getPageSize: (layout) => {
+    if (layout === "main" && isMainMenuScreenKey()) return 6;
+    const w = window.innerWidth || document.documentElement.clientWidth || 1024;
+    const h = window.innerHeight || document.documentElement.clientHeight || 768;
+    return Math.min(w, h) < 700 ? 4 : 6;
+  },
   render,
   speak
 });
@@ -3236,7 +3242,7 @@ function renderButtons(items, layout) {
     btn.appendChild(label);
     btn.addEventListener("click", () => activateItem(sideSlotItem));
     gridEl.appendChild(btn);
-  } else {
+  } else if (!manualSideNavItems.length) {
     appendPagerButtons(gridEl, pageInfo, { sidePager: usesSideFrame });
   }
   appendQuickToiletTile({ side: usesSideFrame && !sideSlotItem && shouldAddQuickToilet });
