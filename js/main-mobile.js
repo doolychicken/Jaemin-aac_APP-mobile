@@ -145,6 +145,7 @@ let preferredKoVoice = null;
 let ttsWarmedUp = false;
 let sharedAudioCtx = null;
 let ttsRequestId = 0;
+let localSpeechAudio = null;
 const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const useDirectYoutubeOpen = true;
@@ -374,6 +375,55 @@ function speakWithRemoteTts(text) {
   return tryNext();
 }
 
+function playLocalSpeech(text, requestId) {
+  const spokenText = String(text || "").trim();
+  const manifest = window.AUDIO_MANIFEST || {};
+  const src = manifest[spokenText];
+  if (!src) return Promise.resolve(false);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer = null;
+    const done = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (localSpeechAudio) {
+        localSpeechAudio.onended = null;
+        localSpeechAudio.onerror = null;
+        localSpeechAudio.oncanplaythrough = null;
+      }
+      resolve(ok && requestId === ttsRequestId);
+    };
+
+    try {
+      if (!localSpeechAudio) localSpeechAudio = new Audio();
+      if (remoteTtsAudio) remoteTtsAudio.pause();
+      localSpeechAudio.pause();
+      localSpeechAudio.removeAttribute("src");
+      localSpeechAudio.load();
+      localSpeechAudio.src = src;
+      localSpeechAudio.preload = "auto";
+      localSpeechAudio.volume = 1;
+      localSpeechAudio.onended = () => done(true);
+      localSpeechAudio.onerror = () => done(false);
+      localSpeechAudio.oncanplaythrough = () => {
+        const playResult = localSpeechAudio.play();
+        if (playResult && typeof playResult.then === "function") {
+          playResult.catch(() => done(false));
+        }
+      };
+      timer = setTimeout(() => done(false), 2600);
+      const playResult = localSpeechAudio.play();
+      if (playResult && typeof playResult.then === "function") {
+        playResult.catch(() => done(false));
+      }
+    } catch (_) {
+      done(false);
+    }
+  });
+}
+
 function speakWithBrowserTts(spokenText) {
   if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) {
     return playTtsFallbackTone();
@@ -425,13 +475,17 @@ function speakWithBrowserTts(spokenText) {
 function speak(text) {
   const spokenText = String(text || "").trim();
   if (!spokenText) return Promise.resolve();
-  ttsRequestId += 1;
-  if (shouldPreferRemoteTts) {
-    return speakWithRemoteTts(spokenText).then((ok) => (
-      ok ? undefined : speakWithBrowserTts(spokenText)
-    ));
-  }
-  return speakWithBrowserTts(spokenText).then(() => undefined);
+  const requestId = ttsRequestId + 1;
+  ttsRequestId = requestId;
+  return playLocalSpeech(spokenText, requestId).then((playedLocal) => {
+    if (playedLocal || requestId !== ttsRequestId) return undefined;
+    if (shouldPreferRemoteTts) {
+      return speakWithRemoteTts(spokenText).then((ok) => (
+        ok ? undefined : speakWithBrowserTts(spokenText)
+      ));
+    }
+    return speakWithBrowserTts(spokenText).then(() => undefined);
+  });
 }
 
 function playPuzzleSound(kind = "success") {
