@@ -50,7 +50,7 @@
         .map((slot, index) => ({ slot, index }))
         .slice(pageStart, isPagedPuzzle ? pageStart + pageSize : slots.length);
       const visibleValues = new Set(visibleSlotEntries.map(({ slot }) => String(slot.value)));
-      const visiblePieces = isPagedPuzzle
+      let visiblePieces = isPagedPuzzle
         ? pieces.filter((piece) => visibleValues.has(String(piece.value)))
         : pieces;
     
@@ -61,14 +61,24 @@
       heroEl.className = "hero";
       gridEl.style.display = "";
       gridEl.innerHTML = "";
-      const useNumberPresentation = puzzle.presentation === "number" || slots.length > 6;
+      const sanitizedTheme = puzzle.theme ? String(puzzle.theme).replace(/[^a-z0-9-]/gi, "") : "";
+      const useNumberPresentation = puzzle.presentation === "number" || (slots.length > 6 && sanitizedTheme !== "symbol-grid");
       const isShortNumberPuzzle = useNumberPresentation && visibleSlotEntries.length <= 4;
-      gridEl.className = `study-puzzle${useNumberPresentation ? " study-puzzle--number" : " study-puzzle--name"}${isShortNumberPuzzle ? " study-puzzle--number-short" : ""}`;
+      const puzzleThemeClass = sanitizedTheme ? ` study-puzzle--${sanitizedTheme}` : "";
+      const hideTrayWhenComplete = !!puzzle.hideTrayWhenComplete;
+      gridEl.className = `study-puzzle${useNumberPresentation ? " study-puzzle--number" : " study-puzzle--name"}${isShortNumberPuzzle ? " study-puzzle--number-short" : ""}${puzzleThemeClass}`;
+      if (isComplete()) gridEl.classList.add("is-complete");
       gridEl.style.setProperty("--study-visible-count", String(Math.max(1, visibleSlotEntries.length)));
       helperEl.textContent = screen.helper || "카드를 끌어서 같은 빈칸에 맞춰요.";
       helperEl.style.display = "";
     
       const matchedValues = new Set(Object.values(state.matches));
+      const trayBatchSize = Number(puzzle.trayBatchSize || 0);
+      if (!isPagedPuzzle && trayBatchSize > 0) {
+        visiblePieces = pieces
+          .filter((piece) => !matchedValues.has(String(piece.value)))
+          .slice(0, trayBatchSize);
+      }
     
       function pieceByValue(value) {
         return pieces.find((piece) => String(piece.value) === String(value))
@@ -393,6 +403,44 @@
         });
       }
     
+      function renderSlotText(target, slotData, isFilled) {
+        target.textContent = "";
+        if (!isFilled && slotData.image) {
+          const wrap = document.createElement("span");
+          wrap.className = "study-puzzle-slot-symbol";
+          const img = document.createElement("img");
+          img.src = slotData.image;
+          img.alt = slotData.label || "";
+          setupImageElement(img, true);
+          wrap.appendChild(img);
+          const label = document.createElement("span");
+          label.textContent = slotData.label;
+          wrap.appendChild(label);
+          target.appendChild(wrap);
+          return;
+        }
+        if (!isFilled || !slotData.completeAnswer) {
+          target.textContent = isFilled ? (slotData.completeLabel || slotData.label) : (slotData.placeholder || slotData.label);
+          return;
+        }
+        if (slotData.completePrefix) {
+          const prefix = document.createElement("span");
+          prefix.className = "study-puzzle-slot-muted";
+          prefix.textContent = slotData.completePrefix;
+          target.appendChild(prefix);
+        }
+        const answer = document.createElement("span");
+        answer.className = "study-puzzle-slot-answer";
+        answer.textContent = slotData.completeAnswer;
+        target.appendChild(answer);
+        if (slotData.completeSuffix) {
+          const suffix = document.createElement("span");
+          suffix.className = "study-puzzle-slot-muted";
+          suffix.textContent = slotData.completeSuffix;
+          target.appendChild(suffix);
+        }
+      }
+
       function setMatched(value, slotEl, sourceEl, movingEl = sourceEl) {
         if (!slotEl) {
           return returnMiss(movingEl, sourceEl);
@@ -417,7 +465,7 @@
           if (pieceColor) slotEl.style.setProperty("--piece-color", pieceColor);
           if (pieceColor) state.matchColors[index] = pieceColor;
           const main = slotEl.querySelector(".study-puzzle-slot-main");
-          if (main) main.textContent = slot.label;
+          if (main) renderSlotText(main, slot, true);
           sourceEl?.classList.remove("is-snapping");
           sourceEl?.classList.add("is-used");
           sourceEl?.setAttribute("disabled", "true");
@@ -463,7 +511,7 @@
         if (filled && state.matchColors[index]) btn.style.setProperty("--piece-color", state.matchColors[index]);
         btn.dataset.index = String(index);
         btn.dataset.value = String(slot.value);
-        btn.addEventListener("click", () => speak(filled ? (slot.speech || slot.label) : `${slot.label} 자리`));
+        btn.addEventListener("click", () => speak(filled ? (slot.completeSpeech || slot.completeLabel || slot.speech || slot.label) : `${slot.placeholder || slot.label} 자리`));
         btn.addEventListener("dragover", (e) => {
           e.preventDefault();
           btn.classList.add("is-ready");
@@ -481,7 +529,7 @@
     
         const main = document.createElement("span");
         main.className = "study-puzzle-slot-main";
-        main.textContent = slot.label;
+        renderSlotText(main, slot, filled);
         btn.appendChild(main);
         return btn;
       }
@@ -517,21 +565,27 @@
           const numberPuzzle = isNumberPuzzle();
           const rect = numberPuzzle ? getPuzzleTextRect(btn) : btn.getBoundingClientRect();
           let didMove = false;
-          const ghost = numberPuzzle ? buildNumberFloater(btn, rect) : btn.cloneNode(true);
-          if (!numberPuzzle) {
-            ghost.classList.add("study-puzzle-card--ghost");
-            Object.assign(ghost.style, {
-              position: "fixed",
-              left: `${rect.left}px`,
-              top: `${rect.top}px`,
-              width: `${rect.width}px`,
-              height: `${rect.height}px`,
-              zIndex: "9999",
-              pointerEvents: "none",
-              margin: "0"
-            });
+          let ghost = null;
+
+          function createGhost() {
+            if (ghost) return ghost;
+            ghost = numberPuzzle ? buildNumberFloater(btn, rect) : btn.cloneNode(true);
+            if (!numberPuzzle) {
+              ghost.classList.add("study-puzzle-card--ghost");
+              Object.assign(ghost.style, {
+                position: "fixed",
+                left: `${rect.left}px`,
+                top: `${rect.top}px`,
+                width: `${rect.width}px`,
+                height: `${rect.height}px`,
+                zIndex: "9999",
+                pointerEvents: "none",
+                margin: "0"
+              });
+            }
+            document.body.appendChild(ghost);
+            return ghost;
           }
-          document.body.appendChild(ghost);
           btn.setPointerCapture(e.pointerId);
           btn.classList.add("is-dragging");
           e.preventDefault();
@@ -540,9 +594,11 @@
             const dx = ev.clientX - e.clientX;
             const dy = ev.clientY - e.clientY;
             if ((dx * dx) + (dy * dy) > 196) didMove = true;
-            ghost.style.left = `${rect.left + dx}px`;
-            ghost.style.top = `${rect.top + dy}px`;
-            if (didMove) highlightDropSlot(piece.value, ev.clientX, ev.clientY, ghost);
+            if (!didMove) return;
+            const dragGhost = createGhost();
+            dragGhost.style.left = `${rect.left + dx}px`;
+            dragGhost.style.top = `${rect.top + dy}px`;
+            highlightDropSlot(piece.value, ev.clientX, ev.clientY, dragGhost);
           }
     
           function up(ev) {
@@ -555,7 +611,6 @@
             document.querySelectorAll(".study-puzzle-slot.is-ready").forEach((el) => el.classList.remove("is-ready"));
             suppressNextClick = true;
             if (!didMove) {
-              ghost.remove();
               speakPiece();
             } else if (target) {
               setMatched(piece.value, target, btn, ghost);
@@ -570,7 +625,7 @@
             btn.removeEventListener("pointerup", up);
             btn.removeEventListener("pointercancel", cancel);
             btn.classList.remove("is-dragging");
-            animatePuzzleReturn(ghost, btn);
+            if (ghost) animatePuzzleReturn(ghost, btn);
             document.querySelectorAll(".study-puzzle-slot.is-ready").forEach((el) => el.classList.remove("is-ready"));
             activePuzzleCard = null;
           }
@@ -587,6 +642,14 @@
           speakPiece();
         });
     
+        if (piece.image) {
+          btn.classList.add("study-puzzle-card--with-image");
+          const img = document.createElement("img");
+          img.src = piece.image;
+          img.alt = piece.label || "";
+          setupImageElement(img, true);
+          btn.appendChild(img);
+        }
         const text = document.createElement("span");
         text.textContent = piece.label;
         btn.appendChild(text);
@@ -600,20 +663,22 @@
       visibleSlotEntries.forEach(({ slot, index }) => board.appendChild(makeSlot(slot, index)));
       gridEl.appendChild(board);
     
-      const tray = document.createElement("section");
-      tray.className = "study-puzzle-tray";
-      const trayTitle = document.createElement("div");
-      trayTitle.className = "study-puzzle-tray-title";
-      trayTitle.textContent = isComplete()
-        ? "다 맞췄어요!"
-        : (isPagedPuzzle ? `퍼즐 조각 ${state.page + 1}/${totalPages}` : "퍼즐 조각");
-      tray.appendChild(trayTitle);
-      const cardGrid = document.createElement("div");
-      cardGrid.className = "study-puzzle-card-grid";
-      visiblePieces
-        .forEach((piece) => cardGrid.appendChild(makeCard(piece, matchedValues.has(String(piece.value)))));
-      tray.appendChild(cardGrid);
-      gridEl.appendChild(tray);
+      if (!(hideTrayWhenComplete && isComplete())) {
+        const tray = document.createElement("section");
+        tray.className = "study-puzzle-tray";
+        const trayTitle = document.createElement("div");
+        trayTitle.className = "study-puzzle-tray-title";
+        trayTitle.textContent = isComplete()
+          ? "다 맞췄어요!"
+          : (isPagedPuzzle ? `퍼즐 조각 ${state.page + 1}/${totalPages}` : "퍼즐 조각");
+        tray.appendChild(trayTitle);
+        const cardGrid = document.createElement("div");
+        cardGrid.className = "study-puzzle-card-grid";
+        visiblePieces
+          .forEach((piece) => cardGrid.appendChild(makeCard(piece, matchedValues.has(String(piece.value)))));
+        tray.appendChild(cardGrid);
+        gridEl.appendChild(tray);
+      }
     
       const actions = document.createElement("div");
       actions.className = "study-puzzle-actions";
@@ -662,6 +727,32 @@
       speakBtn.addEventListener("click", () => speak(puzzle.completeSpeech || puzzle.title || screen.title));
       actions.appendChild(speakBtn);
       gridEl.appendChild(actions);
+
+      if (isComplete() && puzzle.successOverlay) {
+        const overlay = document.createElement("section");
+        overlay.className = "study-puzzle-success";
+        const panel = document.createElement("div");
+        panel.className = "study-puzzle-success-panel";
+        const title = document.createElement("div");
+        title.className = "study-puzzle-success-title";
+        title.textContent = "성공";
+        const star = document.createElement("div");
+        star.className = "study-puzzle-success-star";
+        star.textContent = "★";
+        const doneBtn = document.createElement("button");
+        doneBtn.type = "button";
+        doneBtn.className = "study-puzzle-success-button";
+        doneBtn.textContent = "완료";
+        doneBtn.addEventListener("click", () => {
+          speak("완료");
+          overlay.remove();
+        });
+        panel.appendChild(title);
+        panel.appendChild(star);
+        panel.appendChild(doneBtn);
+        overlay.appendChild(panel);
+        gridEl.appendChild(overlay);
+      }
     }
     
 

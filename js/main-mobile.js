@@ -660,6 +660,7 @@ function youtubeSearchUrl(query) {
 }
 
 function resolveYoutube(item) {
+  if (item.videoUrl) return item.videoUrl;
   if (!item.youtube) return "";
   return DATA.youtube[item.youtube] || "";
 }
@@ -3139,6 +3140,11 @@ function renderButtons(items, layout) {
     const yUrl = resolveYoutube(item);
     const speechText = item.speech || item.label;
 
+    if (item.directOpen && yUrl) {
+      window.location.href = yUrl;
+      return;
+    }
+
     if (currentKey() === "dateMonthPicker") {
       dateSelection.month = Number(item.label.replace("월", ""));
       speak(item.label); popScreen();
@@ -3185,7 +3191,7 @@ function renderButtons(items, layout) {
       }
     }, 70);
 
-    const speechDone = Promise.resolve(speak(speechText));
+    const speechDone = item.silent ? Promise.resolve() : Promise.resolve(speak(speechText));
     if (item.label === "다음" || item.label === "이전") {
       speechDone.finally(moveAfterSpeech);
     } else {

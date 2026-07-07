@@ -29,6 +29,11 @@ function buildStudyScreensMap() {
     { label: "탈것", image: "./images/knobpuzzle_vehicles.png" }
   ];
 
+  function emojiImage(emoji) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="28" fill="#fff7ed"/><text x="80" y="104" text-anchor="middle" font-size="86">${emoji}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+
   const defs = [
     {
       key: "studyPeg",
@@ -71,6 +76,9 @@ function buildStudyScreensMap() {
     { label: "숫자",   nav: "studyNumbers",    image: "./images/stickerbook_number.png" },
     { label: "한글",   nav: "studyHangul",     image: "./images/stickerbook_language.png" },
     { label: "이름",   nav: "studyNames",      image: "./images/person/me.png" },
+    { label: "사람",   nav: "studyPeople",     image: "./images/outing_person_me.png" },
+    { label: "상징 매칭", nav: "studySymbolMatching", image: emojiImage("🎂") },
+    { label: "상징 매칭 2", nav: "studySymbolMatchingV2", image: emojiImage("🧩") },
     { label: "과일",   nav: "studySticker_2",  image: "./images/stickerbook_fruit.png" },
     { label: "우리집", nav: "studySticker_3",  image: "./images/stickerbook_myhome.png" },
     { label: "동물",   nav: "studySticker_4",  image: "./images/stickerbook_animal.png" },
@@ -93,6 +101,124 @@ function buildStudyScreensMap() {
     { label: "엄마 김주리 버전1", nav: "studyNamePuzzleMom", image: "./images/person/mom.png", speech: "엄마 이름은 김주리야" },
     { label: "엄마 김주리 버전2", nav: "studyNamePuzzleMomV2", image: "./images/knobpuzzle_numbers.png", speech: "엄마 이름은 김주리야" }
   ];
+
+  const studyPeopleProfiles = [
+    { key: "me", label: "나", name: "홍재민", relation: "나", age: "13", image: "./images/outing_person_me.png", speech: "나는 홍재민이야. 나는 13살이야" },
+    { key: "mom", label: "엄마", name: "김주리", relation: "엄마", image: "./images/outing_person_mom.png", speech: "엄마야. 엄마 이름은 김주리야" },
+    { key: "dad", label: "아빠", name: "홍진혁", relation: "아빠", image: "./images/outing_person_dad.png", speech: "아빠야. 아빠 이름은 홍진혁이야" },
+    { key: "activitySupportTeacher", label: "활동보조 선생님", relation: "선생님", image: "./images/outing_person_activity_support.png" },
+    { key: "homeroomTeacher", label: "담임선생님", relation: "선생님", image: "./images/school_homeroom_teacher.png" },
+    { key: "assistantTeacher", label: "실무사 선생님", relation: "선생님", icon: "👩‍🏫" },
+    { key: "communicationTeacher", label: "사람과소통 김지은 선생님", relation: "선생님", image: "./images/person/사람과소통 김지은선생님1.png", imageFit: "cover" },
+    { key: "bigTreeTeacher", label: "큰나무병원 선생님", relation: "선생님", image: "./images/therapy_class_cognitive.png" },
+    { key: "severanceTeacher", label: "세브란스 병원 선생님", relation: "선생님", image: "./images/therapy_center_severance.png" },
+    { key: "geonmin", label: "건민", relation: "친구", image: "./images/school_friends_건민.png" },
+    { key: "dongha", label: "동하", relation: "친구", image: "./images/school_friends_동하.png" },
+    { key: "seungwoo", label: "승우", relation: "친구", image: "./images/school_friends_승우.png" },
+    { key: "yunhee", label: "윤희", relation: "친구", image: "./images/school_friends_윤희.png" },
+    { key: "yunhee2", label: "윤희 2", relation: "친구", image: "./images/school_friends_윤희1.png" },
+    { key: "harin", label: "하린", relation: "친구", image: "./images/school_friends_하린.png" },
+    { key: "grandma", label: "할머니", relation: "할머니", image: "./images/outing_person_grandma.png" },
+    { key: "grandpa", label: "할아버지", relation: "할아버지", image: "./images/outing_person_grandpa.png" },
+    { key: "aunt", label: "큰엄마", relation: "큰엄마", icon: "👩" },
+    { key: "uncle", label: "큰아빠", relation: "큰아빠", icon: "👨" },
+    { key: "rahee", label: "라희", relation: "가족", image: "./images/person/rahee.png" },
+    { key: "raon", label: "라온이", relation: "가족", image: "./images/person/raon.png" }
+  ];
+
+  const studyPeopleNameChoices = ["홍재민", "김주리", "홍진혁"];
+  const studyPeopleRelationChoices = ["엄마", "나", "아빠"];
+  const studyPeopleAgeChoices = ["12", "13", "14"];
+
+  const symbolMatchingItems = [
+    { key: "cake", symbol: "케이크", answer: "생일축하", image: "./images/cake.jpg", choices: ["생일축하", "물 마셔요", "버스 타요"] },
+    { key: "carKey", symbol: "차키", answer: "자동차", image: "./images/dad_carkey.png", choices: ["자동차", "생일축하", "카트"] },
+    { key: "spoon", symbol: "수저", answer: "밥", image: "./images/spoon.jpg", choices: ["밥", "칫솔", "밖에 나가자"] },
+    { key: "toothpaste", symbol: "치약", answer: "칫솔", image: "./images/toothpaste.png", choices: ["칫솔", "자동차", "빵가게"] },
+    { key: "shoes", symbol: "신발", answer: "밖에 나가자", image: "./images/shoes.png", choices: ["밖에 나가자", "밥", "카트"] },
+    { key: "eggTart", symbol: "에그타르트", answer: "빵가게", image: "./images/meal_eggtart.png", choices: ["빵가게", "칫솔", "자동차"] },
+    { key: "mart", symbol: "마트", answer: "초코우유", image: "./images/outing_mart1.png", choices: ["초코우유", "생일축하", "밖에 나가자"] },
+    { key: "water", symbol: "물", answer: "물 마셔요", image: "./images/water.png", choices: ["밥", "물 마셔요", "생일축하"] },
+    { key: "toilet", symbol: "화장실", answer: "소변", image: "./images/toilet.png", choices: ["소변", "유튜브 봐요", "자동차"] },
+    { key: "bus", symbol: "버스", answer: "버스 타요", image: "./images/bus.png", choices: ["생일축하", "버스 타요", "물 마셔요"] },
+    { key: "youtube", symbol: "유튜브", answer: "유튜브 봐요", image: "./images/youtube.png", choices: ["물 마셔요", "밥", "유튜브 봐요"] },
+    { key: "fireStation", symbol: "소방서", answer: "소방차", image: "./images/fire_station.png", choices: ["소방차", "경찰차", "버스 타요"] },
+    { key: "policeStation", symbol: "경찰서", answer: "경찰차", image: "./images/policestation.png", choices: ["경찰차", "소방차", "자동차"] },
+    { key: "coffee", symbol: "커피", answer: "커피숍", image: "./images/cofee.png", choices: ["커피숍", "빵가게", "물 마셔요"] }
+  ];
+
+  function symbolPieceImage(item) {
+    if (item.key === "cake") return "./images/birthday.png";
+    if (item.key === "carKey") return "./images/dadcar.png";
+    if (item.key === "spoon") return "./images/meal_rice1.png";
+    if (item.key === "toothpaste") return "./images/toothbush.png";
+    if (item.key === "shoes") return "./images/shoes.png";
+    if (item.key === "eggTart") return "./images/paris_baguatte.png";
+    if (item.key === "mart") return "./images/chocomilk.jpg";
+    if (item.key === "fireStation") return "./images/fire truck.png";
+    if (item.key === "policeStation") return "./images/policecar.png";
+    if (item.key === "coffee") return "./images/edia_cafe.png";
+    if (item.key === "toilet") return "./images/pee.png";
+    return "";
+  }
+
+  function symbolChoicePieces(choices) {
+    return choices.map((label) => {
+      let image = "";
+      if (label === "생일축하") image = "./images/birthday.png";
+      if (label === "자동차") image = "./images/dadcar.png";
+      if (label === "밥") image = "./images/meal_rice1.png";
+      if (label === "칫솔") image = "./images/toothbush.png";
+      if (label === "밖에 나가자") image = "./images/shoes.png";
+      if (label === "빵가게") image = "./images/paris_baguatte.png";
+      if (label === "카트") image = "./images/outing_mart1.png";
+      if (label === "초코우유") image = "./images/chocomilk.jpg";
+      if (label === "물 마셔요") image = "./images/water.png";
+      if (label === "소변") image = "./images/pee.png";
+      if (label === "화장실 가요") image = "./images/pee.png";
+      if (label === "유튜브 봐요") image = "./images/youtube.png";
+      if (label === "버스 타요") image = "./images/bus.png";
+      if (label === "소방차") image = "./images/fire truck.png";
+      if (label === "경찰차") image = "./images/policecar.png";
+      if (label === "커피숍") image = "./images/edia_cafe.png";
+      return { label, value: label, speech: label, image };
+    });
+  }
+
+  function choicePieces(choices) {
+    return choices.map((label) => ({ label, value: label, speech: label }));
+  }
+
+  function ageChoicePieces(choices) {
+    return choices.map((age) => ({ label: `${age}살`, value: age, speech: `${age}살` }));
+  }
+
+  function personTargetName(person) {
+    return person.name || person.label;
+  }
+
+  function threeChoices(target, choices) {
+    if (choices.includes(target)) return choices;
+    const fallback = choices.filter((choice) => choice !== target);
+    return [fallback[0] || target, target, fallback[1] || target].filter((choice, index, arr) => arr.indexOf(choice) === index);
+  }
+
+  function personRelationSpeech(person) {
+    return person.label === person.relation
+      ? `${person.label}야`
+      : `${person.label}은 ${person.relation}이야`;
+  }
+
+  function personRelationCompleteParts(person) {
+    if (person.label === person.relation) {
+      return { prefix: "", answer: person.relation, suffix: "야" };
+    }
+    return { prefix: `${person.label}은 `, answer: person.relation, suffix: "이야" };
+  }
+
+  function symbolCompleteLabel(item) {
+    return `${item.symbol}는 ${item.answer}`;
+  }
 
   const vehicleStudyItems = [
     { label: "자동차", image: "./images/transport_car.png" },
@@ -136,6 +262,7 @@ function buildStudyScreensMap() {
     hero: [],
     items: [
       { label: "숫자 퍼즐", nav: "studyNumberPuzzle", image: "./images/knobpuzzle_numbers.png" },
+      { label: "숫자 퍼즐 2", nav: "studyNumberPuzzle2", image: "./images/knobpuzzle_numbers2.png" },
       { label: "숫자 카드", nav: "studySticker_6", image: "./images/stickerbook_number.png" }
     ],
     layout: "main",
@@ -152,6 +279,47 @@ function buildStudyScreensMap() {
     puzzle: {
       title: "1부터 10까지",
       completeSpeech: "숫자 퍼즐 완료! 정말 잘했어요!",
+      slots: [
+        { label: "1", value: "1", speech: "일" },
+        { label: "2", value: "2", speech: "이" },
+        { label: "3", value: "3", speech: "삼" },
+        { label: "4", value: "4", speech: "사" },
+        { label: "5", value: "5", speech: "오" },
+        { label: "6", value: "6", speech: "육" },
+        { label: "7", value: "7", speech: "칠" },
+        { label: "8", value: "8", speech: "팔" },
+        { label: "9", value: "9", speech: "구" },
+        { label: "10", value: "10", speech: "십" }
+      ],
+      pieces: [
+        { label: "1", value: "1", speech: "일" },
+        { label: "2", value: "2", speech: "이" },
+        { label: "3", value: "3", speech: "삼" },
+        { label: "4", value: "4", speech: "사" },
+        { label: "5", value: "5", speech: "오" },
+        { label: "6", value: "6", speech: "육" },
+        { label: "7", value: "7", speech: "칠" },
+        { label: "8", value: "8", speech: "팔" },
+        { label: "9", value: "9", speech: "구" },
+        { label: "10", value: "10", speech: "십" }
+      ]
+    }
+  };
+
+  rest.studyNumberPuzzle2 = {
+    title: "숫자 퍼즐 2",
+    helper: "아래 숫자를 끌어서 나무판의 같은 숫자 자리에 맞춰요.",
+    hero: [],
+    items: [],
+    layout: "studyPuzzle",
+    showPlayer: false,
+    puzzle: {
+      title: "숫자 퍼즐 2",
+      presentation: "number",
+      theme: "wood",
+      trayBatchSize: 3,
+      successOverlay: true,
+      completeSpeech: "숫자 퍼즐 2 완료! 정말 잘했어요!",
       slots: [
         { label: "1", value: "1", speech: "일" },
         { label: "2", value: "2", speech: "이" },
@@ -278,6 +446,213 @@ function buildStudyScreensMap() {
     layout: "main",
     showPlayer: false
   };
+
+  rest.studyPeople = {
+    title: "사람",
+    helper: "사람을 골라 이름과 관계를 배워요.",
+    hero: [],
+    items: studyPeopleProfiles.map((person) => ({
+      label: person.label,
+      nav: `studyPerson_${person.key}`,
+      image: person.image,
+      icon: person.icon,
+      imageFit: person.imageFit,
+      speech: person.speech || person.label
+    })),
+    layout: "main",
+    showPlayer: false
+  };
+
+  rest.studySymbolMatching = {
+    title: "상징 매칭",
+    helper: "그림을 보고 맞는 말을 골라요.",
+    hero: [],
+    items: symbolMatchingItems.map((item) => ({
+      label: item.symbol,
+      nav: `studySymbolMatch_${item.key}`,
+      image: item.image,
+      speech: item.answer
+    })),
+    layout: "main",
+    showPlayer: false
+  };
+
+  symbolMatchingItems.forEach((item) => {
+    const completeLabel = symbolCompleteLabel(item);
+    rest[`studySymbolMatch_${item.key}`] = {
+      title: item.symbol,
+      helper: `${item.symbol} 그림은 무슨 말이야?`,
+      hero: [],
+      items: [],
+      layout: "studyPuzzle",
+      showPlayer: false,
+      puzzle: {
+        title: `${item.symbol} 상징 매칭`,
+        image: item.image,
+        imageLabel: item.symbol,
+        theme: "people",
+        hideTrayWhenComplete: true,
+        completeSpeech: completeLabel,
+        slots: [
+          {
+            label: item.answer,
+            value: item.answer,
+            speech: item.answer,
+            placeholder: "무슨 말?",
+            completeLabel,
+            completePrefix: `${item.symbol}는 `,
+            completeAnswer: item.answer,
+            completeSuffix: ""
+          }
+        ],
+        pieces: symbolChoicePieces(item.choices)
+      }
+    };
+  });
+
+  rest.studySymbolMatchingV2 = {
+    title: "상징 매칭 2",
+    helper: "위의 상징 칸에 맞는 말 카드를 끌어다 놓아요.",
+    hero: [],
+    items: [],
+    layout: "studyPuzzle",
+    showPlayer: false,
+    puzzle: {
+      title: "상징 매칭 2",
+      theme: "symbol-grid",
+      pageSize: 4,
+      completeSpeech: "상징 매칭 2 완료! 정말 잘했어요!",
+      slots: symbolMatchingItems.map((item) => ({
+        label: item.symbol,
+        value: item.answer,
+        image: item.image,
+        speech: item.symbol,
+        completeLabel: item.answer
+      })),
+      pieces: symbolMatchingItems.map((item) => ({
+        label: item.answer,
+        value: item.answer,
+        speech: item.answer,
+        image: symbolPieceImage(item)
+      }))
+    }
+  };
+
+  studyPeopleProfiles.forEach((person) => {
+    const screenKey = `studyPerson_${person.key}`;
+    const targetName = personTargetName(person);
+    const nameChoices = threeChoices(targetName, studyPeopleNameChoices);
+    const relationChoices = threeChoices(person.relation, studyPeopleRelationChoices);
+    const relationParts = personRelationCompleteParts(person);
+    const menuItems = [
+      { label: "이름 맞추기", nav: `${screenKey}_name`, image: person.image, icon: person.icon, imageFit: person.imageFit },
+      { label: "누구인지 맞추기", nav: `${screenKey}_relation`, image: person.image, icon: person.icon, imageFit: person.imageFit }
+    ];
+    if (person.age) {
+      menuItems.splice(1, 0, { label: "나이 맞추기", nav: `${screenKey}_age`, image: "./images/stickerbook_number.png" });
+    }
+
+    rest[screenKey] = {
+      title: person.label,
+      helper: "무엇을 배울지 골라요.",
+      hero: [],
+      items: menuItems,
+      layout: "main",
+      showPlayer: false
+    };
+
+    rest[`${screenKey}_name`] = {
+      title: `${person.label} 이름`,
+      helper: person.key === "me" ? "나의 이름은 누구야?" : `${person.label} 이름은 누구야?`,
+      hero: [],
+      items: [],
+      layout: "studyPuzzle",
+      showPlayer: false,
+      puzzle: {
+        title: `${person.label} 이름 맞추기`,
+        image: person.image,
+        imageLabel: person.label,
+        theme: "people",
+        hideTrayWhenComplete: true,
+        completeSpeech: person.key === "me" ? `내 이름은 ${targetName}이야` : `${person.label} 이름은 ${targetName}이야`,
+        slots: [
+          {
+            label: targetName,
+            value: targetName,
+            speech: targetName,
+            placeholder: "이름",
+            completeLabel: person.key === "me" ? `내 이름은 ${targetName}이야` : `${person.label} 이름은 ${targetName}이야`,
+            completePrefix: person.key === "me" ? "내 이름은 " : `${person.label} 이름은 `,
+            completeAnswer: targetName,
+            completeSuffix: "이야"
+          }
+        ],
+        pieces: choicePieces(nameChoices)
+      }
+    };
+
+    rest[`${screenKey}_relation`] = {
+      title: `${person.label} 누구`,
+      helper: `${person.label}은 누구야?`,
+      hero: [],
+      items: [],
+      layout: "studyPuzzle",
+      showPlayer: false,
+      puzzle: {
+        title: `${person.label} 누구인지 맞추기`,
+        image: person.image,
+        imageLabel: person.label,
+        theme: "people",
+        hideTrayWhenComplete: true,
+        completeSpeech: personRelationSpeech(person),
+        slots: [
+          {
+            label: person.relation,
+            value: person.relation,
+            speech: person.relation,
+            placeholder: "누구",
+            completeLabel: personRelationSpeech(person),
+            completePrefix: relationParts.prefix,
+            completeAnswer: relationParts.answer,
+            completeSuffix: relationParts.suffix
+          }
+        ],
+        pieces: choicePieces(relationChoices)
+      }
+    };
+
+    if (person.age) {
+      rest[`${screenKey}_age`] = {
+        title: `${person.label} 나이`,
+        helper: "내 나이는 몇 살이야?",
+        hero: [],
+        items: [],
+        layout: "studyPuzzle",
+        showPlayer: false,
+        puzzle: {
+          title: `${person.label} 나이 맞추기`,
+          image: person.image,
+          imageLabel: person.label,
+          theme: "people",
+          hideTrayWhenComplete: true,
+          completeSpeech: `내 나이는 ${person.age}살이야`,
+          slots: [
+            {
+              label: `${person.age}살`,
+              value: person.age,
+              speech: `${person.age}살`,
+              placeholder: "몇 살",
+              completeLabel: `내 나이는 ${person.age}살이야`,
+              completePrefix: "내 나이는 ",
+              completeAnswer: `${person.age}살`,
+              completeSuffix: "이야"
+            }
+          ],
+          pieces: ageChoicePieces(studyPeopleAgeChoices)
+        }
+      };
+    }
+  });
 
   rest.studyNamePuzzleJaemin = {
     title: "홍재민",
