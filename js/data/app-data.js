@@ -56,6 +56,8 @@ const DATA = {
     seoulDrive: "https://www.youtube.com/@TheSeoulDrive",
     bebefinChannel: "https://www.youtube.com/@%EB%B2%A0%EB%B2%A0%ED%95%80",
     pororoChannel: "https://www.youtube.com/@%EB%BD%80%EB%A1%9C%EB%A1%9C%EA%B3%B5%EC%8B%9D%EC%B1%84%EB%84%90",
+    ukuleleSearch: "https://www.youtube.com/results?search_query=%EC%9A%B0%EC%BF%A0%EB%A0%90%EB%A0%88+%EC%97%B0%EC%A3%BC",
+    pianoSearch: "https://www.youtube.com/results?search_query=%ED%94%BC%EC%95%84%EB%85%B8+%EC%97%B0%EC%A3%BC",
     mealRiceYoutube: "https://www.youtube.com/watch?v=7IPlzOBDxSc&list=RD7IPlzOBDxSc&start_radio=1"
   },
 
@@ -104,7 +106,7 @@ const DATA = {
       items: [
         { label: "사람",      nav: "peopleHome",   image: "./images/outing_person_me.png" },
         { label: "날씨",      nav: "weatherHome",  image: "./images/weather.png" },
-        { label: "화장실2",   nav: "toilet2",      image: "./images/toilet.png" },
+        { label: "화장실",    nav: "toilet",       image: "./images/pee.png" },
         { label: "이전",      nav: "main_p2",      image: "./images/home.png" },
         { label: "다음",      nav: "main",         image: "./images/outing.png" }
       ],
@@ -573,6 +575,8 @@ const DATA = {
         { label: "서울드라이브", youtube: "seoulDrive", image: "./images/seouldrive.png" },
         { label: "베베핀", youtube: "bebefinChannel", image: "./images/bebefinn.png" },
         { label: "뽀로로", youtube: "pororoChannel", image: "./images/pororo.png" },
+        { label: "우쿠렐레", youtube: "ukuleleSearch", image: "./images/ukulele.png" },
+        { label: "피아노", youtube: "pianoSearch", image: "./images/piano.png" },
         { label: "노래",      nav: "ipadMusic",    image: "./images/sing.png" }
       ],
       layout: "main",
@@ -673,7 +677,7 @@ const DATA = {
       helper: "원하는 카테고리를 선택하세요.",
       hero: [],
       items: [
-        { label: "밥",   nav: "mealRice",      image: "./images/meal_rice.png" },
+        { label: "밥",   nav: "mealRice",      image: "./images/meal.png" },
         { label: "간식", nav: "mealSnack",     image: "./images/meal_eggtart.png" },
         { label: "과일", nav: "mealFruit",     image: "./images/apple.png" },
         { label: "야채", nav: "mealVegetable", image: "./images/tomato.png" },
@@ -805,20 +809,7 @@ const DATA = {
       helper: "원하는 것을 선택하세요.",
       hero: [],
       items: [
-        { label: "물소리", image: "./images/wash_hands.png", videoUrl: "https://www.youtube.com/watch?v=M3R5JHsL3ic", directOpen: true, silent: true },
-        { label: "똥싸고 싶어요",   image: "./images/poo.png" },
-        { label: "오줌싸고 싶어요", image: "./images/pee.png" }
-      ],
-      layout: "media",
-      showPlayer: false
-    },
-
-    toilet2: {
-      title: "화장실2",
-      helper: "원하는 것을 선택하세요.",
-      hero: [],
-      items: [
-        { label: "물소리", image: "./images/wash_hands.png", videoUrl: "https://www.youtube.com/watch?v=M3R5JHsL3ic", directOpen: true, silent: true },
+        { label: "물소리", image: "./images/watersound.png", audioUrl: "./audio/watersound.mp3", loopAudio: true, silent: true },
         { label: "똥싸고 싶어요",   image: "./images/poo.png" },
         { label: "오줌싸고 싶어요", image: "./images/pee.png" },
         { label: "양치",           image: "./images/brush.png" },

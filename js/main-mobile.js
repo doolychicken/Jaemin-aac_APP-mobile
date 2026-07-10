@@ -85,11 +85,10 @@ function teachingAidCurrentCompletionId(item = null) {
 
 function filterCompletedTeachingAidItems(items) {
   if (!isInTeachingAidFlow()) return items || [];
+  if (currentKey() === "studyTeachingAids") return items || [];
   return (items || []).filter((item) => {
     if (item.label === "다음" || item.label === "이전") return true;
-    const completionId = currentKey() === "studyTeachingAids"
-      ? (item.teachingAidId || teachingAidItemCompletionId(item))
-      : teachingAidItemCompletionId(item);
+    const completionId = teachingAidItemCompletionId(item);
     return !completionId || !isTeachingAidComplete(completionId);
   });
 }
@@ -252,6 +251,18 @@ const studyPuzzleFeature = window.createStudyPuzzleFeature({
   playPuzzleSound,
   speak,
   setupImageElement,
+  render
+});
+
+const recyclingGameFeature = window.createRecyclingGameFeature({
+  appMainEl,
+  spotlightViewEl,
+  spotlightBtnEl,
+  heroEl,
+  gridEl,
+  helperEl,
+  playPuzzleSound,
+  speak,
   render
 });
 
@@ -592,6 +603,38 @@ function playWeatherSound(label = "") {
 
     setTimeout(() => ctx.close().catch(() => {}), 900);
   } catch (_e) {}
+}
+
+let mediaSoundState = null;
+
+function stopMediaSound() {
+  if (!mediaSoundState) return;
+  const audio = mediaSoundState.audio;
+  mediaSoundState = null;
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+  } catch (_e) {}
+}
+
+function toggleMediaSound(src, loop) {
+  if (!src) return;
+  if (mediaSoundState && mediaSoundState.src === src) {
+    stopMediaSound();
+    return;
+  }
+  stopMediaSound();
+  const audio = new Audio(src);
+  mediaSoundState = { audio, src };
+  audio.loop = !!loop;
+  audio.volume = 1;
+  audio.addEventListener("ended", () => {
+    if (mediaSoundState && mediaSoundState.audio === audio) mediaSoundState = null;
+  }, { once: true });
+  audio.play().catch(() => {
+    stopMediaSound();
+    speak("소리를 재생할 수 없어요");
+  });
 }
 
 function warmupTTS() {
@@ -3140,6 +3183,11 @@ function renderButtons(items, layout) {
     const yUrl = resolveYoutube(item);
     const speechText = item.speech || item.label;
 
+    if (item.audioUrl) {
+      toggleMediaSound(item.audioUrl, item.loopAudio);
+      return;
+    }
+
     if (item.directOpen && yUrl) {
       window.location.href = yUrl;
       return;
@@ -3270,6 +3318,30 @@ function renderButtons(items, layout) {
     gridEl.appendChild(btn);
   });
 
+  if (currentKey() === "studyTeachingAids") {
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "tile";
+    resetBtn.setAttribute("aria-label", "처음부터 다시");
+
+    const art = document.createElement("div");
+    art.className = "tile-art";
+    art.textContent = "↻";
+
+    const label = document.createElement("div");
+    label.className = "tile-label";
+    label.textContent = "처음부터 다시";
+
+    resetBtn.appendChild(art);
+    resetBtn.appendChild(label);
+    resetBtn.addEventListener("click", () => {
+      resetTeachingAidProgress();
+      speak("처음부터 다시");
+      render();
+    });
+    gridEl.appendChild(resetBtn);
+  }
+
   sideNavItems.forEach((item) => {
     const btn = document.createElement("button");
     btn.className = `tile-nav-arrow tile-nav-arrow--${item.label === "이전" ? "prev" : "next"}`;
@@ -3371,6 +3443,7 @@ function renderTeachingAidEmptyComplete(screen) {
 function render() {
   const key    = currentKey();
   const screen = DATA.screens[key] || DATA.screens.main;
+  if (key !== "toilet") stopMediaSound();
   const isMain = key === "main";
   backBtn.style.display = isMain ? "none" : "inline-flex";
   homeBtn.style.display = isMain ? "none" : "inline-flex";
@@ -3450,6 +3523,8 @@ function render() {
     scheduleFeature.render(key, screen);
   } else if (screen.layout === "studyPuzzle") {
     studyPuzzleFeature.render(screen);
+  } else if (screen.layout === "recyclingGame") {
+    recyclingGameFeature.render({ ...screen, key });
   } else if (isSpotlight) {
     appMainEl.classList.add("app--spotlight");
     spotlightViewEl.style.display = "flex";
@@ -3492,6 +3567,7 @@ function render() {
   if (
     gridEl.style.display !== "none"
     && screen.layout !== "studyPuzzle"
+    && screen.layout !== "recyclingGame"
     && !gridEl.classList.contains("teaching-aid-complete")
     && !gridEl.classList.contains("teaching-aid-empty-complete")
   ) {
@@ -3521,6 +3597,8 @@ homeBtn.addEventListener("click", () => {
   outingPlannerMode = "";
   scheduleFeature.resetToHome();
   studyPuzzleFeature.clear();
+  recyclingGameFeature.clear();
+  stopMediaSound();
   selectedYoutube = "";
   resetPageState();
   render();

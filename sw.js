@@ -4,7 +4,7 @@
  * On first visit, pre-caches all images so subsequent loads are instant.
  */
 
-const CACHE_VERSION = 'mobile-v7';
+const CACHE_VERSION = 'mobile-v8';
 const CACHE_NAME = `jaemin-aac-${CACHE_VERSION}`;
 
 self.addEventListener('message', (event) => {
@@ -19,6 +19,7 @@ const PRECACHE_ASSETS = [
   './mobile/index.html',
   './css/app.css',
   './css/features/study-puzzle.css',
+  './css/features/recycling-game.css',
   './css/date-overrides.css',
   './css/app-mobile.css',
   './js/data/study-data.js',
@@ -27,7 +28,9 @@ const PRECACHE_ASSETS = [
   './js/core/pager.js',
   './js/features/schedule.js',
   './js/features/study-puzzle.js',
+  './js/features/recycling-game.js',
   './js/main-mobile.js',
+  './audio/watersound.mp3',
   // -- Offline speech audio --
   './audio/tts/01622928ec3497e70f88a08c75ee990a8817b121.mp3',
   './audio/tts/038ae6e4bf7ecedd9d68a0af5eb6397c9a96454f.mp3',
@@ -440,11 +443,18 @@ const PRECACHE_ASSETS = [
   './images/paris_baguatte.png',
   './images/pee.png',
   './images/pineapple.png',
+  './images/piano.png',
   './images/policecar.png',
   './images/policestation.png',
   './images/poo.png',
   './images/pororo.png',
   './images/pororo.jpg',
+  './images/recycling_can.jpg',
+  './images/recycling_foam.jpg',
+  './images/recycling_glass.png',
+  './images/recycling_paper.jpg',
+  './images/recycling_plastic.jpg',
+  './images/recycling_station.png',
   './images/school bus.png',
   './images/school_boccia.png',
   './images/school_cafeteria.png',
@@ -502,8 +512,10 @@ const PRECACHE_ASSETS = [
   './images/transport_subway.png',
   './images/transport_subway_JM.png',
   './images/transport_walk.png',
+  './images/ukulele.png',
   './images/wash_face.png',
   './images/wash_hands.png',
+  './images/watersound.png',
   './images/watermelon.png',
   './images/weather_cards/sunny.svg',
   './images/weather_cards/cloudy.svg',
