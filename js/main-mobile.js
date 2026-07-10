@@ -3188,6 +3188,12 @@ function renderButtons(items, layout) {
       return;
     }
 
+    if (item.immediateNav && item.nav) {
+      pushScreen(item.nav, item.label);
+      render();
+      return;
+    }
+
     if (item.directOpen && yUrl) {
       window.location.href = yUrl;
       return;
@@ -3440,6 +3446,35 @@ function renderTeachingAidEmptyComplete(screen) {
 }
 
 // ── 메인 렌더 ────────────────────────────────────────────────────────────────
+function renderLocalVideo(screen) {
+  appMainEl.classList.remove("app--spotlight");
+  spotlightViewEl.style.display = "none";
+  spotlightBtnEl.onclick = null;
+  heroEl.style.display = "none";
+  gridEl.style.display = "";
+  gridEl.innerHTML = "";
+  gridEl.className = "local-video-view";
+
+  const videoData = screen.video || {};
+  const video = document.createElement("video");
+  video.className = "local-video-player";
+  video.src = videoData.src || "";
+  if (videoData.poster) video.poster = videoData.poster;
+  video.controls = true;
+  video.autoplay = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.setAttribute("aria-label", videoData.label || screen.title || "동영상");
+  video.addEventListener("click", () => {
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  });
+  gridEl.appendChild(video);
+  video.play().catch(() => {});
+}
+
 function render() {
   const key    = currentKey();
   const screen = DATA.screens[key] || DATA.screens.main;
@@ -3525,6 +3560,8 @@ function render() {
     studyPuzzleFeature.render(screen);
   } else if (screen.layout === "recyclingGame") {
     recyclingGameFeature.render({ ...screen, key });
+  } else if (screen.layout === "localVideo") {
+    renderLocalVideo(screen);
   } else if (isSpotlight) {
     appMainEl.classList.add("app--spotlight");
     spotlightViewEl.style.display = "flex";
@@ -3568,6 +3605,7 @@ function render() {
     gridEl.style.display !== "none"
     && screen.layout !== "studyPuzzle"
     && screen.layout !== "recyclingGame"
+    && screen.layout !== "localVideo"
     && !gridEl.classList.contains("teaching-aid-complete")
     && !gridEl.classList.contains("teaching-aid-empty-complete")
   ) {

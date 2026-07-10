@@ -4,7 +4,7 @@
  * On first visit, pre-caches all images so subsequent loads are instant.
  */
 
-const CACHE_VERSION = 'mobile-v8';
+const CACHE_VERSION = 'mobile-v9';
 const CACHE_NAME = `jaemin-aac-${CACHE_VERSION}`;
 
 self.addEventListener('message', (event) => {
@@ -31,6 +31,7 @@ const PRECACHE_ASSETS = [
   './js/features/recycling-game.js',
   './js/main-mobile.js',
   './audio/watersound.mp3',
+  './video/watersound.mp4',
   // -- Offline speech audio --
   './audio/tts/01622928ec3497e70f88a08c75ee990a8817b121.mp3',
   './audio/tts/038ae6e4bf7ecedd9d68a0af5eb6397c9a96454f.mp3',
